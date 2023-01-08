@@ -1,7 +1,6 @@
 #include "helpers/textfilehelper.h"
 #include "logger.h"
 #include <QFileInfo>
-#include <QTextCodec>
 #include <QTextStream>
 
 
@@ -28,7 +27,7 @@ QString TextFileHelper::Load(const QString& filename) {
     if (f.open(QFile::ReadOnly | QFile::Text))  {
         zInfo(QStringLiteral("loaded: %1").arg(filename));
         QTextStream st(&f);
-        st.setCodec("UTF-8");
+        st.setEncoding(QStringConverter::Utf8);
         e = st.readAll();
     }
     else{
@@ -61,7 +60,7 @@ QStringList TextFileHelper::LoadLines(const QString& filename) {
     if (f.open(QFile::ReadOnly | QFile::Text))  {
         zInfo(QStringLiteral("loaded: %1").arg(filename));
         QTextStream st(&f);
-        st.setCodec("UTF-8");
+        st.setEncoding(QStringConverter::Utf8);
 
         while (!st.atEnd())
         {
