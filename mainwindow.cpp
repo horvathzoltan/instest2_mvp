@@ -21,6 +21,11 @@ MainWindow::~MainWindow()
 
 /*UserActions*/
 
+void MainWindow::on_pushButton_clicked()
+{
+    emit GetApiverActionTriggered(this);
+}
+
 void MainWindow::set_ApiverView(const ViewModel::Apiver &m)
 {
     QString msg2 = m.apiver.toString();
@@ -32,9 +37,12 @@ void MainWindow::onTimerTimeout()
     if(_tick==0){
 
     }
-    //   emit GetApiverActionTriggered(this);
+    //   emit GetDataActionTriggered(this);
     _tick++;    
 }
+
+
+
 
 
 

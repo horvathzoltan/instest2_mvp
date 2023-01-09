@@ -23,10 +23,6 @@ public:
 private:
     QList<IMainView*> _views;
 
-    ViewModel::Page GetActivePage(ViewModel::State state);
-    bool IsGoAlertPage(const Model::CurrentAlert& w);
-    bool IsGoWarningPage(const Model::CurrentWarning& w);
-
 private slots:
     // (wiew)action -> (presenter)processAction -> [ (dowork)ResponseAction -> (presenter)onResponseAction -> ] (wiew)set_view
     //                 ------------------------                                ---------------------------

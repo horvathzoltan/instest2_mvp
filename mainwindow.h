@@ -29,6 +29,8 @@ signals:
 private slots:
     void onTimerTimeout();
 
+    void on_pushButton_clicked();
+
 private:
     Ui::MainWindow *ui;
     QTimer _timer;

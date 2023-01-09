@@ -47,8 +47,11 @@ void MainPresenter::initView(IMainView *w) const {
 
 /*GetApiver*/
 void MainPresenter::processGetApiverAction(IMainView *sender){
-    auto guid = _dowork.GetApiver();
-    _senders.insert(guid,sender);
+    //auto guid = _dowork.GetApiver();
+    //_senders.insert(guid,sender);
+
+    ViewModel::Apiver rm = {55};
+    sender->set_ApiverView(rm);
 }
 
 void MainPresenter::onResponseGetApiverAction(ResponseModel::GetApiVer m)

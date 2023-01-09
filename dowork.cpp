@@ -22,7 +22,7 @@ auto DoWork::init(const DoWorkInit& m) -> bool
 {
     _isInited = false;
 
-    if(!_httpHelper.init(m.settings._host, m.settings._port)) return _isInited;
+//    if(!_httpHelper.init(m.settings._host, m.settings._port)) return _isInited;
 
     QObject::connect(&_httpHelper, SIGNAL(ResponseOk(QUuid,QString,QByteArray)),
                      this, SLOT(ResponseOkAction(QUuid,QString,QByteArray)));
@@ -53,7 +53,7 @@ void DoWork::GetApiverResponse(const QUuid& guid, QByteArray s){
     if(rootobj.isEmpty()){
         r.msg = "no response";
     }else{
-        r.apiVer = Model::ApiVer::JsonParse(rootobj);
+        r.apiVer = {55};//Model::ApiVer::JsonParse(rootobj);
         r.msg = "apiver: "+r.apiVer.toString();
     }
 
