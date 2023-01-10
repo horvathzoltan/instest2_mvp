@@ -11,7 +11,9 @@ namespace ViewModel
 {    
 
     struct Apiver{
-        Model::ApiVer apiver;
+        //Model::ApiVer apiver;
+        QString errors;
+        QStringList hosts;
     };  
 
     struct Device{

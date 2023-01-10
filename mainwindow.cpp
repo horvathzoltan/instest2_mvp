@@ -28,8 +28,8 @@ void MainWindow::on_pushButton_clicked()
 
 void MainWindow::set_ApiverView(const ViewModel::Apiver &m)
 {
-    QString msg2 = m.apiver.toString();
-    ui->label->setText(msg2);
+    //QString msg2 = m.hosts.join('\n');
+    ui->label->setText(m.errors);
 }
 
 void MainWindow::onTimerTimeout()

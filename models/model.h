@@ -5,13 +5,7 @@
 #include <QString>
 
 namespace Model
-{    
-    struct ApiVer{
-        int buildnum = 0;
-
-        QString toString() const;
-    };
-
+{       
     struct Device{
         QString address = "";
         bool connected = false;
@@ -21,7 +15,7 @@ namespace Model
     };
 
     struct Data{
-            ApiVer apiVer;
+            //ApiVer apiVer;
             Device device;
         };
 };

@@ -18,6 +18,7 @@ SOURCES += \
     helpers/htmlhelper.cpp \
     helpers/httphelper.cpp \
     helpers/textfilehelper.cpp \
+    ipscanner.cpp \
     logger.cpp \
     main.cpp \
     mainpresenter.cpp \
@@ -25,6 +26,7 @@ SOURCES += \
     models/commandlineargs.cpp \
     models/model.cpp \
     models/settings.cpp \
+    workerthread.cpp \
     zshortguid.cpp
 
 HEADERS += \
@@ -35,6 +37,7 @@ HEADERS += \
     helpers/httphelper.h \
     helpers/textfilehelper.h \
     imainview.h \
+    ipscanner.h \
     logger.h \
     macro.h \
     mainpresenter.h \
@@ -44,6 +47,7 @@ HEADERS += \
     models/responsemodel.h \
     models/settings.h \
     models/viewmodel.h \
+    workerthread.h \
     zshortguid.h
 
 FORMS += \

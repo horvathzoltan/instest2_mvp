@@ -7,6 +7,7 @@
 #include <QDir>
 #include <QProcess>
 #include <models/settings.h>
+#include "ipscanner.h"
 #include "logger.h"
 
 int main(int argc, char *argv[])
@@ -53,6 +54,8 @@ int main(int argc, char *argv[])
     }
 */
 
+
+    IpScanner::setVerbose(false);
 
     MainWindow w;
     MainPresenter p;

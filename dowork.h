@@ -7,6 +7,7 @@
 #include <models/viewmodel.h>
 #include "models/commandlineargs.h"
 #include "helpers/httphelper.h"
+#include "workerthread.h"
 
 
 class DoWork: public QObject
@@ -28,9 +29,18 @@ public:
 
     QUuid GetApiver();
 
-    void setData(const Model::ApiVer& m){_data.apiVer = m;}    
+    //void setData(const Model::ApiVer& m){_data.apiVer = m;}
 
-    Model::ApiVer apiVer(){ return _data.apiVer; }    
+    struct FindPiModelR{
+        QString localAddress;
+        QMap<QString, QSet<int>> ipAddresses;
+        QStringList errors;
+    };
+
+    FindPiModelR FindPi(const QSet<int>& ports, int timeout);
+  //  Model::ApiVer apiVer(){ return _data.apiVer; }
+
+    void startWorkInAThread(WorkerThread::Model m);
 
 private:
     bool _isInited = false;
@@ -39,17 +49,17 @@ private:
 
     Model::Data _data;
 
-    void GetApiverResponse(const QUuid& guid, QByteArray s);
+   // void GetApiverResponse(const QUuid& guid, QByteArray s);
 
 // (wiew)action -> (presenter)processAction -> [ (dowork)ResponseAction -> (presenter)onResponseAction -> ] (wiew)set_view
 //                                               ----------------------
-signals:
+//signals:
     //2//apiver
-    void ResponseGetApiverAction(ResponseModel::GetApiVer);
+    //void ResponseGetApiverAction(ResponseModel::GetApiVer);
 
 private slots:
     void ResponseOkAction(const QUuid& guid, const QString& action, QByteArray s);
-
+    void handleResults(const WorkerThread::ModelR &s);
 };
 
 #endif // DOWORK_H

@@ -19,10 +19,10 @@ namespace ResponseModel{
     };
 
 
-    struct GetApiVer: public Base{
-        GetApiVer(const QUuid _guid):Base(_guid){};
-        Model::ApiVer apiVer;
-    };   
+//    struct GetApiVer: public Base{
+//        GetApiVer(const QUuid _guid):Base(_guid){};
+//        Model::ApiVer apiVer;
+//    };
 
 };
 #endif // RESPONSEMODEL_H
