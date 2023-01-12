@@ -28,7 +28,7 @@ private slots:
     //                 ------------------------                                ---------------------------
     //2//apiver
     void processGetApiverAction(IMainView *sender);
-    //void onResponseGetApiverAction(ResponseModel::GetApiVer);
+    void onResponseFindPi(ResponseModel::FindPi m);
 
 private:
     bool _isInited = false;

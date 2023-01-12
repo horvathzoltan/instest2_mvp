@@ -33,8 +33,8 @@ auto MainPresenter::init(const MainPresenterInit& m) -> bool
     _dowork.init({m.settings});
     // (dowork)ResponseAction - (presenter)onResponseAction
     //2//apiver
-    connect(&_dowork,SIGNAL(ResponseGetApiverAction(ResponseModel::GetApiVer)),
-            this,SLOT(onResponseGetApiverAction(ResponseModel::GetApiVer)));
+    connect(&_dowork,SIGNAL(ResponseFindPi(ResponseModel::FindPi)),
+            this,SLOT(onResponseFindPi(ResponseModel::FindPi)));
     _isInited = true;
     return true;
 }
@@ -48,34 +48,20 @@ void MainPresenter::initView(IMainView *w) const {
 
 /*GetApiver*/
 void MainPresenter::processGetApiverAction(IMainView *sender){
-    DoWork::FindPiModelR result = _dowork.FindPi({8080}, 30);
-
-    ViewModel::Apiver m;
-
-    for(auto&key:result.ipAddresses.keys())
-    {
-        QSet<int> values = result.ipAddresses[key];
-        QString str;//ports
-        for(auto&v:values){
-            if(!str.isEmpty()) str+=',';
-            str+=QString::number(v);
-        };
-        m.hosts.append("ip:" + key + ":" +str);
-    }
-
-    m.errors = result.errors.first();
-    sender->set_ApiverView(m);
+    ResponseModel::FindPi r = _dowork.FindPi({8080}, 30);
+    _senders.insert(r.guid,sender);
+    ViewModel::FindPi vm;
+    vm.errors = r.message;
+    sender->set_ApiverView(vm);
 }
 
-//void MainPresenter::onResponseGetApiverAction(ResponseModel::GetApiVer m)
-//{
-//    if(_senders.contains(m.guid)){
-//        //_data.apiVer = m.apiVer;
-//        //_dowork.setData(m.apiVer);
-//        ViewModel::Apiver rm = {m.apiVer};
-//        _senders[m.guid]->set_ApiverView(rm);
-//        _senders.remove(m.guid);
-//    }
-//}
+void MainPresenter::onResponseFindPi(ResponseModel::FindPi m)
+{
+    if(_senders.contains(m.guid)){
+        ViewModel::FindPi vm = {.errors = m.message, .hosts=m.iplist };
+        _senders[m.guid]->set_ApiverView(vm);
+        _senders.remove(m.guid);
+    }
+}
 
 

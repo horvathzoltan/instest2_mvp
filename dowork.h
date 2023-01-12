@@ -31,16 +31,16 @@ public:
 
     //void setData(const Model::ApiVer& m){_data.apiVer = m;}
 
-    struct FindPiModelR{
-        QString localAddress;
-        QMap<QString, QSet<int>> ipAddresses;
-        QStringList errors;
-    };
+//    struct FindPiModelR{
+//        QString localAddress;
+//        QMap<QString, QSet<int>> ipAddresses;
+//        QStringList errors;
+//    };
 
-    FindPiModelR FindPi(const QSet<int>& ports, int timeout);
+    ResponseModel::FindPi FindPi(const QSet<int>& ports, int timeout);
   //  Model::ApiVer apiVer(){ return _data.apiVer; }
 
-    void startWorkInAThread(WorkerThread::Model m);
+    void startWorkInAThread(WorkerThread::Model m, QUuid guid);
 
 private:
     bool _isInited = false;
@@ -53,13 +53,14 @@ private:
 
 // (wiew)action -> (presenter)processAction -> [ (dowork)ResponseAction -> (presenter)onResponseAction -> ] (wiew)set_view
 //                                               ----------------------
-//signals:
+signals:
+    void ResponseFindPi(ResponseModel::FindPi);
     //2//apiver
     //void ResponseGetApiverAction(ResponseModel::GetApiVer);
 
 private slots:
     void ResponseOkAction(const QUuid& guid, const QString& action, QByteArray s);
-    void handleResults(const WorkerThread::ModelR &s);
+    void handleResults(const WorkerThread::Result &s);
 };
 
 #endif // DOWORK_H

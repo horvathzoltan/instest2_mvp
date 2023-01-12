@@ -31,34 +31,38 @@ auto DoWork::init(const DoWorkInit& m) -> bool
     return true;
 }
 
-DoWork::FindPiModelR DoWork::FindPi(const QSet<int>& ports, int timeout)
-{
-    FindPiModelR result;
+ResponseModel::FindPi DoWork::FindPi(const QSet<int>& ports, int timeout)
+{   
+    QUuid guid;
+    ResponseModel::FindPi r(guid);
+
+    //FindPiModelR result;
 
     auto a = IpScanner::GetLocalAddresses();
     if(a.isEmpty())
     {
-        result.errors.append(QStringLiteral("No local ip address"));
+        r.message = QStringLiteral("No local ip address");
     }
     else
     {
         WorkerThread::Model m(a.first(), ports, timeout);
-        startWorkInAThread(m);
-        result.errors.append(QStringLiteral("searching..."));
+        startWorkInAThread(m, guid);
+        r.message= QStringLiteral("searching...");
     }
-    return result;
+    return r;
 }
 
-void DoWork::startWorkInAThread(WorkerThread::Model m)
+void DoWork::startWorkInAThread(WorkerThread::Model m, QUuid guid)
 {
-    WorkerThread *workerThread = new WorkerThread(m);
+    WorkerThread *workerThread = new WorkerThread(m, guid);
     connect(workerThread, &WorkerThread::resultReady, this, &DoWork::handleResults);
     connect(workerThread, &WorkerThread::finished, workerThread, &QObject::deleteLater);
     workerThread->start();
 }
 
-void DoWork::handleResults(const WorkerThread::ModelR &result){
-
+void DoWork::handleResults(const WorkerThread::Result& result)
+{
+    ResponseModel::FindPi r(result.guid);
     for(auto&key:result.ipList.keys()){
         QSet<int> values = result.ipList[key];
         QString str;//ports
@@ -66,8 +70,10 @@ void DoWork::handleResults(const WorkerThread::ModelR &result){
             if(!str.isEmpty()) str+=',';
             str+=QString::number(v);
         };
-        zInfo("ip:" + key + ":" +str);
+        auto txt = "ip:" + key + ":" +str;
+        r.iplist.append(txt);
     }
+    emit ResponseFindPi(r);
 }
 
 QUuid DoWork::GetApiver()
@@ -75,7 +81,8 @@ QUuid DoWork::GetApiver()
     return _httpHelper.GetAction(APIVER);
 }
 
-void DoWork::ResponseOkAction(const QUuid& guid, const QString& action,  QByteArray s){
+void DoWork::ResponseOkAction(const QUuid& guid, const QString& action,  QByteArray s)
+{
     //if(action==APIVER) GetApiverResponse(guid,s);
     //else zInfo("unknown action: "+action);
 }

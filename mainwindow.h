@@ -21,7 +21,7 @@ public:
 // (wiew)action -> (presenter)processAction -> [ (dowork)ResponseAction -> (presenter)onResponseAction -> ] (wiew)set_view
 // ------------                                                                                             --------------
 
-    void set_ApiverView(const ViewModel::Apiver& m);
+    void set_ApiverView(const ViewModel::FindPi& m);
 
 signals:
     void GetApiverActionTriggered(IMainView *sender);

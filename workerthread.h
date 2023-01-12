@@ -5,6 +5,7 @@
 #include <QSet>
 #include <QString>
 #include <QThread>
+#include <QUuid>
 #include "ipscanner.h"
 
 class WorkerThread : public QThread
@@ -21,29 +22,31 @@ public:
         int timeout;
     };
 
-    struct ModelR{
+    struct Result{
         QMap<QString, QSet<int>> ipList;
+        QUuid guid;
     };
 
 private:
 
     Model _model;
+    QUuid _guid;
 
 public:
-    WorkerThread(Model m);
+    WorkerThread(Model m, QUuid guid);
 
 private:
     void run() override {
-        ModelR result;
+        Result result;
 
         auto a= IpScanner::Scan(_model.host, 1, 254, _model.ports, _model.timeout);
-            //IpScanner::Scan(a.first(), 1, 254, ports, timeout);
 
         result.ipList = a;
+        result.guid = _guid;
         emit resultReady(result);
     }
 signals:
-    void resultReady(const ModelR &s);
+    void resultReady(const Result &s);
 };
 
 #endif // WORKERTHREAD_H

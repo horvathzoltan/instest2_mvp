@@ -14,15 +14,15 @@ namespace ResponseModel{
         Base(const QUuid _guid){
             guid = _guid;
         }
-        QString msg;
+        QString message;
         QUuid guid;
     };
 
 
-//    struct GetApiVer: public Base{
-//        GetApiVer(const QUuid _guid):Base(_guid){};
-//        Model::ApiVer apiVer;
-//    };
+    struct FindPi: public Base{
+        FindPi(const QUuid _guid):Base(_guid){};
+        QStringList iplist;
+    };
 
 };
 #endif // RESPONSEMODEL_H

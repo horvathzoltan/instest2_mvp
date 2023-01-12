@@ -10,7 +10,8 @@ WorkerThread::Model::Model(QHostAddress host, QSet<int> ports, int timeout)
       ports(std::move(ports)),
       timeout(timeout) {}
 
-WorkerThread::WorkerThread(Model m){
+WorkerThread::WorkerThread(Model m, QUuid guid){
     _model = m;
+    _guid = guid;
 }
 

@@ -26,10 +26,17 @@ void MainWindow::on_pushButton_clicked()
     emit GetApiverActionTriggered(this);
 }
 
-void MainWindow::set_ApiverView(const ViewModel::Apiver &m)
+void MainWindow::set_ApiverView(const ViewModel::FindPi &m)
 {
-    //QString msg2 = m.hosts.join('\n');
-    ui->label->setText(m.errors);
+    if(!m.hosts.isEmpty())
+    {
+        QString hosts = m.hosts.join('\n');
+        ui->label->setText(hosts);
+    }
+    else{
+        ui->label->clear();
+    }
+    ui->label_2->setText(m.errors);
 }
 
 void MainWindow::onTimerTimeout()
