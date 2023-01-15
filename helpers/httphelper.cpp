@@ -7,11 +7,7 @@
 
 const QString HttpHelper::KEY=QStringLiteral("key");
 
-HttpHelper::HttpHelper(QObject *parent)
-    : QObject{parent}
-{
-
-}
+HttpHelper::HttpHelper(QObject *parent): QObject{parent}{}
 
 bool HttpHelper::init(const QString& host, int port)
 {
@@ -35,11 +31,28 @@ QUuid HttpHelper::GetAction(const QString& action)//, const QString& query)
 {
     auto mgr = CreateMgr();
     auto guid = RegisterAction(action, mgr);
-    if(!action.startsWith('#')) _url.setPath((action.startsWith('/')?action:'/'+action));
+    if(!action.startsWith('#'))
+    {
+        auto path = (action.startsWith('/')?action:'/'+action);
+        _url.setPath(path);
+        //zInfo("url: "+_url.toString());
+    }
     //_url.setQuery(query);
-    auto request = CreateRequest(_url);
+    QNetworkRequest request = CreateRequest(_url);
+    QString msg = RequestToString(request);
+    zInfo("request: "+msg);
     mgr->get(request);
     return guid;
+}
+
+QString HttpHelper::RequestToString(const QNetworkRequest& request)
+{
+    QString msg = request.url().toString();
+    const QList<QByteArray>& rawHeaderList(request.rawHeaderList());
+    for(auto&rawHeader:rawHeaderList) {
+        msg+=" "+ QString(rawHeader);
+    }
+    return msg;
 }
 
 QUuid HttpHelper::GetAction2(const QString& action, const QString& query)
@@ -169,6 +182,12 @@ void HttpHelper::onFinish(QNetworkReply *rep)
         int statusCode = rep->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
         auto a =  QVariant(statusCode).toString();
         zInfo("error: "+err+ " code: "+a);
+        auto queryString = url.query();
+        auto q = QUrlQuery(queryString);
+        QString keyString=q.queryItemValue(KEY);
+        auto guid = zShortGuid::Decode(keyString);
+        auto action = _actions[guid];
+        emit ResponseErr(guid, action.action);
     } else {
         QByteArray location = rep->rawHeader(QString("Location").toLocal8Bit());
         if (location.size() > 0) {

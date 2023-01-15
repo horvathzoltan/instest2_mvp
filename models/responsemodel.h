@@ -1,8 +1,6 @@
 #ifndef RESPONSEMODEL_H
 #define RESPONSEMODEL_H
 
-#include "model.h"
-
 #include <QPixmap>
 #include <QString>
 #include <QUuid>

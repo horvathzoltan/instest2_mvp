@@ -11,8 +11,7 @@ namespace ViewModel
 {    
 
     struct FindPi{
-        //Model::ApiVer apiver;
-        QString errors;
+        QString message;
         QStringList hosts;
     };  
 

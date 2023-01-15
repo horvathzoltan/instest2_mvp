@@ -1,6 +1,5 @@
 #include "dowork.h"
 #include "dowork.h"
-#include "logger.h"
 #include "mainpresenter.h"
 #include <QDebug>
 #include <models/viewmodel.h>
@@ -46,21 +45,23 @@ void MainPresenter::initView(IMainView *w) const {
 
 
 
+
 /*GetApiver*/
 void MainPresenter::processGetApiverAction(IMainView *sender){
     ResponseModel::FindPi r = _dowork.FindPi({8080}, 30);
     _senders.insert(r.guid,sender);
     ViewModel::FindPi vm;
-    vm.errors = r.message;
+    vm.message = r.message;
     sender->set_ApiverView(vm);
 }
 
 void MainPresenter::onResponseFindPi(ResponseModel::FindPi m)
 {
     if(_senders.contains(m.guid)){
-        ViewModel::FindPi vm = {.errors = m.message, .hosts=m.iplist };
+        ViewModel::FindPi vm = {.message = m.message, .hosts=m.iplist };
         _senders[m.guid]->set_ApiverView(vm);
-        _senders.remove(m.guid);
+        // ha a request ready, azaz nem jön több művelet
+        //_senders.remove(m.guid);
     }
 }
 

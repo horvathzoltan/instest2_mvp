@@ -45,7 +45,7 @@ QMap<QString, QSet<int>> IpScanner::Scan(QHostAddress ip, int i1, int i2, QSet<i
                 auto a = address.toString();
                 ipList[a].insert(port);
                 if(_verbose)
-                    log("\r"+a+":"+QString::number(port)+"\n");
+                    log("\r"+address.toString()+":"+QString::number(port)+"\n");
             }
             else{
                 if(_verbose)

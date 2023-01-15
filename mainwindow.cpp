@@ -36,7 +36,7 @@ void MainWindow::set_ApiverView(const ViewModel::FindPi &m)
     else{
         ui->label->clear();
     }
-    ui->label_2->setText(m.errors);
+    ui->label_2->setText(m.message);
 }
 
 void MainWindow::onTimerTimeout()

@@ -6,9 +6,8 @@
 #include <QString>
 #include <QThread>
 #include <QUuid>
-#include "ipscanner.h"
 
-class WorkerThread : public QThread
+class FindPiThread : public QThread
 {
     Q_OBJECT
 
@@ -27,24 +26,13 @@ public:
         QUuid guid;
     };
 
-private:
-
+private:    
     Model _model;
     QUuid _guid;
 
-public:
-    WorkerThread(Model m, QUuid guid);
-
-private:
-    void run() override {
-        Result result;
-
-        auto a= IpScanner::Scan(_model.host, 1, 254, _model.ports, _model.timeout);
-
-        result.ipList = a;
-        result.guid = _guid;
-        emit resultReady(result);
-    }
+    void run() override;
+public:    
+     FindPiThread(Model m, QUuid guid);
 signals:
     void resultReady(const Result &s);
 };

@@ -26,6 +26,7 @@ public:
     QUuid DownloadFromHost(const QString& action, const QString &path);
 
     //QString url(){ return _url.host();}
+    QString RequestToString(const QNetworkRequest &request);
 public slots:
     void onFinish(QNetworkReply *rep);
 signals:

@@ -27,7 +27,7 @@ private slots:
     // (wiew)action -> (presenter)processAction -> [ (dowork)ResponseAction -> (presenter)onResponseAction -> ] (wiew)set_view
     //                 ------------------------                                ---------------------------
     //2//apiver
-    void processGetApiverAction(IMainView *sender);
+    void processGetApiverAction(IMainView *sender);       
     void onResponseFindPi(ResponseModel::FindPi m);
 
 private:

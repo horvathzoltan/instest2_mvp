@@ -14,10 +14,10 @@ namespace Model
         QString toString() const;
     };
 
-    struct Data{
-            //ApiVer apiVer;
-            Device device;
-        };
+//    struct Data{
+//            //ApiVer apiVer;
+//            Device device;
+//        };
 };
 
 #endif // MODELS_H

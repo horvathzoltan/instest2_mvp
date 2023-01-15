@@ -8,7 +8,7 @@
 #include "models/commandlineargs.h"
 #include "helpers/httphelper.h"
 #include "workerthread.h"
-
+#include <QMap>
 
 class DoWork: public QObject
 {
@@ -27,7 +27,7 @@ public:
 
     bool init(const DoWorkInit& m);
 
-    QUuid GetApiver();
+    //QUuid GetApiver();
 
     //void setData(const Model::ApiVer& m){_data.apiVer = m;}
 
@@ -40,15 +40,42 @@ public:
     ResponseModel::FindPi FindPi(const QSet<int>& ports, int timeout);
   //  Model::ApiVer apiVer(){ return _data.apiVer; }
 
-    void startWorkInAThread(WorkerThread::Model m, QUuid guid);
+
+
+    void StartFindPiThread(FindPiThread::Model m, QUuid guid);
 
 private:
     bool _isInited = false;
-    //CommadLineArgs params;
-    HttpHelper _httpHelper;        
 
-    Model::Data _data;
+    struct InsoleApi{
+        QString key;
+        //QUuid presenterGuid;
+        HttpHelper* httpHelper;
+        bool checked;
+        bool isError;
+        QString name;
+        int buildnum;
+        int datalength;
+        QString data;
+        //int insoletypeV
+        //int[] prssures
 
+        QString toString(){
+            QString msg =  name
+                    +","+QString::number(buildnum)
+                    +","+(checked?"ok":"Nok")
+                    +","+QString::number(datalength);
+                    //+","+data;
+            return msg;
+        }
+    };
+
+    QUuid _findPiPresenterGuid;
+    QMap<QString, InsoleApi> _insoleApis;
+    QMap<QUuid, QString> _actions;
+    //Model::Data _data;
+
+    void CheckReady();
    // void GetApiverResponse(const QUuid& guid, QByteArray s);
 
 // (wiew)action -> (presenter)processAction -> [ (dowork)ResponseAction -> (presenter)onResponseAction -> ] (wiew)set_view
@@ -60,7 +87,8 @@ signals:
 
 private slots:
     void ResponseOkAction(const QUuid& guid, const QString& action, QByteArray s);
-    void handleResults(const WorkerThread::Result &s);
+    void ResponseNotOkAction(const QUuid& guid, const QString& action, QByteArray s);
+    void FindPiThreadResults(const FindPiThread::Result &s);
 };
 
 #endif // DOWORK_H
