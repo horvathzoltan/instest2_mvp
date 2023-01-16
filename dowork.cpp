@@ -27,7 +27,8 @@ auto DoWork::init(const DoWorkInit& m) -> bool
     //QObject::connect(&httpHelper, SIGNAL(ResponseOk(QUuid,QString,QByteArray)),
     //                 this, SLOT(ResponseOkAction(QUuid,QString,QByteArray)));
 
-    _isInited = true;
+    auto l = Model::InsoleType::ParseList(Model::InsoleType::CSV);
+    _isInited = true;    
     return true;
 }
 

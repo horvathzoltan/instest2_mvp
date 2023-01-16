@@ -14,8 +14,30 @@ namespace Model
         QString toString() const;
     };
 
+    template<typename T>
+    struct Meta{
+        struct Row{
+            int offset;
+            QString name;
+            Row(){};
+            Row(void* a, void* b, const QString& _name);
+        };
+
+        Meta(T* a);
+
+        T* base;
+        QMap<QString, Row> rows;
+
+        template<typename R>
+        void AddRow(R* b, const QString& _name);
+
+        template<typename Q>
+        void Set(const QString& _name, Q v);
+    };
+
     struct InsoleType{
         static const QString CSV;
+        static const QString CSV_header;
         int Id;
         QDateTime LastModified;
         QString Name;

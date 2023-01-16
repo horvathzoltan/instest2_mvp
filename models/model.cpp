@@ -1,4 +1,5 @@
 #include "model.h"
+#include "logger.h"
 
 
 //QString Model::ApiVer::toString() const
@@ -6,7 +7,7 @@
 //    return QString::number(buildnum);
 //}
 
-const QString Model::InsoleType::CSV = R"(1,'2020-02-08 14:15:00.0000000',N'42Jobb',1,2,3,42.0,N'insole;channel;x;y;r;ratio
+const QString Model::InsoleType::CSV = R"((1,'2020-02-08 14:15:00.0000000',N'42Jobb',1,2,3,42.0,N'insole;channel;x;y;r;ratio
 42j16sd;RIGHT;-1;-1;none;none
 42j16s;4;19;239;18.8;0.555556
 42j16s;5;49;235;18.2857;0.555556
@@ -409,19 +410,91 @@ const QString Model::InsoleType::CSV = R"(1,'2020-02-08 14:15:00.0000000',N'42Jo
 39b16sw;3;0,9;-1;none;none
 39b16sw;4;0,8;-1;none;none',1000,121,106)";
 
+const QString Model::InsoleType::CSV_header =
+        R"(Id,LastModified,Name,InsoleGenderId,InsoleAgeCategoryId,InsoleSideId,EUSize,GeometryCSV,R,VMax,VMin)";
+
 QList<Model::InsoleType> Model::InsoleType::ParseList(const QString &str)
 {
-    QStringList tokens = str.split(",\t");
+    QStringList tokens = str.split(",\n");
+
     QList<Model::InsoleType> r;
     for(auto&token:tokens){
+        int ix1 = token.indexOf(QChar('('));
+        int ix2 = token.lastIndexOf(QChar(')'));
+        int ix= ix1+1;
+        int length = ix2-ix1-1;
+        token = token.mid(ix,length);
+        //zInfo("token:"+token);
         InsoleType insoleType = Parse(token);
         r.append(insoleType);
     }
     return r;
 }
 
-//Id,LastModified,Name,InsoleGenderId,InsoleAgeCategoryId,InsoleSideId,EUSize,GeometryCSV,R,VMax,VMin
+
 Model::InsoleType Model::InsoleType::Parse(const QString &str)
 {
+    Model::InsoleType r;
 
+    //QStringList h_tokens = str.split(",");
+
+    Meta<Model::InsoleType> meta(&r);
+    meta.AddRow<int>(&r.Id, "Id"); //0
+    meta.AddRow<QDateTime>(&r.LastModified, "LastModified"); //1
+    meta.AddRow<QString>(&r.Name, "Name"); //2
+    meta.AddRow<int>(&r.InsoleGenderId, "InsoleGenderId"); //3
+    meta.AddRow<int>(&r.InsoleAgeCategoryId, "InsoleAgeCategoryId"); //4
+    meta.AddRow<int>(&r.InsoleSideId, "InsoleSideId"); //5
+    meta.AddRow<qreal>(&r.EUSize, "EUSize"); //6
+    meta.AddRow<QString>(&r.GeometryCSV, "GeometryCSV"); //7
+    meta.AddRow<int>(&r.R, "R"); //8
+    meta.AddRow<int>(&r.VMax, "VMax"); //9
+    meta.AddRow<int>(&r.VMin, "VMin"); //10
+
+    QStringList tokens = str.split(",");
+    if(tokens.length()<11) return r;
+    bool ok;
+    int vInt = tokens[0].toInt(&ok);
+    if(ok) meta.Set<int>("Id", vInt);
+    QString vQString = tokens[2];
+    meta.Set<QString>("Name", vQString);
+    vInt = tokens[5].toInt(&ok);
+    if(ok) meta.Set<int>("InsoleSideId", vInt);
+    qreal vQreal = tokens[6].toDouble(&ok);
+    if(ok) meta.Set<qreal>("EUSize", vQreal);
+    vQString = tokens[7];
+    meta.Set<QString>("GeometryCSV", vQString);
+    vInt = tokens[8].toInt(&ok);
+    if(ok) meta.Set<int>("R", vInt);
+    vInt = tokens[9].toInt(&ok);
+    if(ok) meta.Set<int>("VMax", vInt);
+    vInt = tokens[10].toInt(&ok);
+    if(ok) meta.Set<int>("VMin", vInt);
+    return r;
 }
+
+template<typename T>
+Model::Meta<T>::Meta(T *a){ base = a;}
+
+template<typename T>
+Model::Meta<T>::Row::Row(void* a, void* b, const QString &_name){
+    offset = (b>=a)?(char*)b-(char*)a:-1;
+    name = _name;
+}
+
+template<typename T>
+template<typename R>
+void Model::Meta<T>::AddRow(R* b, const QString& _name){
+    rows.insert(_name, Row(base, b, _name));
+}
+
+template<typename T>
+template<typename Q>
+void Model::Meta<T>::Set(const QString& _name, Q v){
+    if(!rows.contains(_name)) return;
+    Row& row = rows[_name];
+    if(row.offset<0) return;
+    *(Q*)((char*)base+row.offset) = v;
+}
+
+
