@@ -437,10 +437,6 @@ Model::InsoleType Model::InsoleType::Parse(const QString &str)
     Model::InsoleType r;
 
     QStringList h_tokens = CSV_header.split(",");
-//    QMap<QString, int> headIxs;
-//    for(int i=0;i<h_tokens.length();i++){
-//        headIxs.insert(h_tokens[i],i);
-//    }
 
     Meta<Model::InsoleType> meta(&r);
     meta.AddRow<int>(&r.Id, "Id"); //0
@@ -462,24 +458,6 @@ Model::InsoleType Model::InsoleType::Parse(const QString &str)
         QString name = h_tokens[i];
         meta.Set2(name, tokens[i]);
     }
-
-/*    bool ok;
-    int vInt = tokens[0].toInt(&ok);
-    if(ok) meta.Set<int>("Id", vInt);
-    QString vQString = tokens[2];
-    meta.Set<QString>("Name", vQString);
-    vInt = tokens[5].toInt(&ok);
-    if(ok) meta.Set<int>("InsoleSideId", vInt);
-    qreal vQreal = tokens[6].toDouble(&ok);
-    if(ok) meta.Set<qreal>("EUSize", vQreal);
-    vQString = tokens[7];
-    meta.Set<QString>("GeometryCSV", vQString);
-    vInt = tokens[8].toInt(&ok);
-    if(ok) meta.Set<int>("R", vInt);
-    vInt = tokens[9].toInt(&ok);
-    if(ok) meta.Set<int>("VMax", vInt);
-    vInt = tokens[10].toInt(&ok);
-    if(ok) meta.Set<int>("VMin", vInt);*/
     return r;
 }
 
