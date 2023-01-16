@@ -19,8 +19,10 @@ namespace Model
         struct Row{
             int offset;
             QString name;
+            QMetaType t;
+
             Row(){};
-            Row(void* a, void* b, const QString& _name);
+            Row(void* a, void* b, const QString& _name, const QMetaType& t);
         };
 
         Meta(T* a);
@@ -33,6 +35,8 @@ namespace Model
 
         template<typename Q>
         void Set(const QString& _name, Q v);
+
+        void Set2(const QString& _name, const QString& v);
     };
 
     struct InsoleType{

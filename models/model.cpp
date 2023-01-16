@@ -436,7 +436,11 @@ Model::InsoleType Model::InsoleType::Parse(const QString &str)
 {
     Model::InsoleType r;
 
-    //QStringList h_tokens = str.split(",");
+    QStringList h_tokens = CSV_header.split(",");
+//    QMap<QString, int> headIxs;
+//    for(int i=0;i<h_tokens.length();i++){
+//        headIxs.insert(h_tokens[i],i);
+//    }
 
     Meta<Model::InsoleType> meta(&r);
     meta.AddRow<int>(&r.Id, "Id"); //0
@@ -453,7 +457,13 @@ Model::InsoleType Model::InsoleType::Parse(const QString &str)
 
     QStringList tokens = str.split(",");
     if(tokens.length()<11) return r;
-    bool ok;
+    if(tokens.length()<h_tokens.length()) return r;
+    for(int i=0;i<h_tokens.length();i++){
+        QString name = h_tokens[i];
+        meta.Set2(name, tokens[i]);
+    }
+
+/*    bool ok;
     int vInt = tokens[0].toInt(&ok);
     if(ok) meta.Set<int>("Id", vInt);
     QString vQString = tokens[2];
@@ -469,7 +479,7 @@ Model::InsoleType Model::InsoleType::Parse(const QString &str)
     vInt = tokens[9].toInt(&ok);
     if(ok) meta.Set<int>("VMax", vInt);
     vInt = tokens[10].toInt(&ok);
-    if(ok) meta.Set<int>("VMin", vInt);
+    if(ok) meta.Set<int>("VMin", vInt);*/
     return r;
 }
 
@@ -477,15 +487,17 @@ template<typename T>
 Model::Meta<T>::Meta(T *a){ base = a;}
 
 template<typename T>
-Model::Meta<T>::Row::Row(void* a, void* b, const QString &_name){
+Model::Meta<T>::Row::Row(void* a, void* b, const QString &_name, const QMetaType& _t){
     offset = (b>=a)?(char*)b-(char*)a:-1;
     name = _name;
+    t = _t;
 }
 
 template<typename T>
 template<typename R>
 void Model::Meta<T>::AddRow(R* b, const QString& _name){
-    rows.insert(_name, Row(base, b, _name));
+    QMetaType t = QMetaType::fromType<R>();
+    rows.insert(_name, Row(base, b, _name, t));
 }
 
 template<typename T>
@@ -497,4 +509,13 @@ void Model::Meta<T>::Set(const QString& _name, Q v){
     *(Q*)((char*)base+row.offset) = v;
 }
 
+template<typename T>
+void Model::Meta<T>::Set2(const QString& _name, const QString& vst){
+    if(!rows.contains(_name)) return;
+    Row& row = rows[_name];
+    if(row.offset<0) return;
 
+    QMetaType o0 = QMetaType::fromType<QString>();
+
+    bool ok = QMetaType::convert(o0, &vst, row.t, (char*)base+row.offset);
+}
