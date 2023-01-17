@@ -1,13 +1,13 @@
-#include "dowork.h"
-#include "logger.h"
-#include "models/responsemodel.h"
 #include <QCommandLineParser>
 #include <QFileInfo>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <models/model.h>
-#include <models/featurerequest.h>
+
+#include "dowork.h"
+#include "logger.h"
+#include "models/responsemodel.h"
+#include "models/model.h"
 #include "ipscanner.h"
 
 const QString DoWork::APIVER = QStringLiteral("apiver");
