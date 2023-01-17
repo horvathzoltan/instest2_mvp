@@ -1,10 +1,9 @@
 #ifndef MODELS_H
 #define MODELS_H
 
-#include <QJsonObject>
+#include "helpers/meta.h"
+#include <QDateTime>
 #include <QString>
-
-#define AddRow2(x) AddRow<0>(#x, sizeof(x))
 
 namespace Model
 {       
@@ -14,31 +13,6 @@ namespace Model
         QString name = "";
 
         QString toString() const;
-    };
-
-    template<typename T>
-    struct Meta{
-        struct Row{
-            int offset;
-            QString name;
-            QMetaType t;
-
-            Row(){};
-            Row(void* a, void* b, const QString& _name, const QMetaType& t);
-        };
-
-        Meta(T* a);
-
-        T* base;
-        QMap<QString, Row> rows;
-
-        template<typename R>
-        void AddRow(R* b, const QString& _name);
-
-        template<typename Q>
-        void Set(const QString& _name, Q v);
-
-        void Set2(const QString& _name, const QString& v);
     };
 
     struct InsoleType{
@@ -57,12 +31,9 @@ namespace Model
         int VMin;
 
         static QList<InsoleType> ParseList(const QString& str);
-        static InsoleType Parse(const QString& str);
+        static InsoleType Parse(const QString& str);        
+        static Meta<Model::InsoleType> GetMeta();
     };
-//    struct Data{
-//            //ApiVer apiVer;
-//            Device device;
-//        };
 };
 
 #endif // MODELS_H

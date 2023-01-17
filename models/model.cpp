@@ -1,6 +1,6 @@
 #include "model.h"
 #include "logger.h"
-
+#include "helpers/meta.h"
 
 //QString Model::ApiVer::toString() const
 //{
@@ -434,66 +434,55 @@ QList<Model::InsoleType> Model::InsoleType::ParseList(const QString &str)
 
 Model::InsoleType Model::InsoleType::Parse(const QString &str)
 {
+//    Model::InsoleType r;
+//    static auto meta = GetMeta();
+//    meta.base = &r;
+
     Model::InsoleType r;
-
-    QStringList h_tokens = CSV_header.split(",");
-
     Meta<Model::InsoleType> meta(&r);
-    meta.AddRow<int>(&r.Id, "Id"); //0
-    meta.AddRow<QDateTime>(&r.LastModified, "LastModified"); //1
-    meta.AddRow<QString>(&r.Name, "Name"); //2
-    meta.AddRow<int>(&r.InsoleGenderId, "InsoleGenderId"); //3
-    meta.AddRow<int>(&r.InsoleAgeCategoryId, "InsoleAgeCategoryId"); //4
-    meta.AddRow<int>(&r.InsoleSideId, "InsoleSideId"); //5
-    meta.AddRow<qreal>(&r.EUSize, "EUSize"); //6
-    meta.AddRow<QString>(&r.GeometryCSV, "GeometryCSV"); //7
-    meta.AddRow<int>(&r.R, "R"); //8
-    meta.AddRow<int>(&r.VMax, "VMax"); //9
-    meta.AddRow<int>(&r.VMin, "VMin"); //10
+    meta.AddRow(int,&r.Id); //0
+    meta.AddRow(QDateTime,&r.LastModified); //1
+    meta.AddRow(QString,&r.Name); //2
+    meta.AddRow(int,&r.InsoleGenderId); //3
+    meta.AddRow(int,&r.InsoleAgeCategoryId); //4
+    meta.AddRow(int,&r.InsoleSideId); //5
+    meta.AddRow(qreal,&r.EUSize); //6
+    meta.AddRow(QString,&r.GeometryCSV); //7
+    meta.AddRow(int,&r.R); //8
+    meta.AddRow(int,&r.VMax); //9
+    meta.AddRow(int,&r.VMin); //10
+
+    QStringList h_tokens = CSV_header.split(",");        
 
     QStringList tokens = str.split(",");
     if(tokens.length()<11) return r;
     if(tokens.length()<h_tokens.length()) return r;
     for(int i=0;i<h_tokens.length();i++){
         QString name = h_tokens[i];
-        meta.Set2(name, tokens[i]);
+        QString value = tokens[i];
+        if(name=="R"){
+            zInfo("R:"+value);
+        }
+        meta.Parse(name, value);
     }
     return r;
 }
 
-template<typename T>
-Model::Meta<T>::Meta(T *a){ base = a;}
-
-template<typename T>
-Model::Meta<T>::Row::Row(void* a, void* b, const QString &_name, const QMetaType& _t){
-    offset = (b>=a)?(char*)b-(char*)a:-1;
-    name = _name;
-    t = _t;
+Meta<Model::InsoleType> Model::InsoleType::GetMeta()
+{
+    Model::InsoleType r;
+    Meta<Model::InsoleType> meta(&r);
+    meta.AddRow(int,&r.Id); //0
+    meta.AddRow(QDateTime,&r.LastModified); //1
+    meta.AddRow(QString,&r.Name); //2
+    meta.AddRow(int,&r.InsoleGenderId); //3
+    meta.AddRow(int,&r.InsoleAgeCategoryId); //4
+    meta.AddRow(int,&r.InsoleSideId); //5
+    meta.AddRow(qreal,&r.EUSize); //6
+    meta.AddRow(QString,&r.GeometryCSV); //7
+    meta.AddRow(int,&r.R); //8
+    meta.AddRow(int,&r.VMax); //9
+    meta.AddRow(int,&r.VMin); //10
+    return meta;
 }
 
-template<typename T>
-template<typename R>
-void Model::Meta<T>::AddRow(R* b, const QString& _name){
-    QMetaType t = QMetaType::fromType<R>();
-    rows.insert(_name, Row(base, b, _name, t));
-}
-
-template<typename T>
-template<typename Q>
-void Model::Meta<T>::Set(const QString& _name, Q v){
-    if(!rows.contains(_name)) return;
-    Row& row = rows[_name];
-    if(row.offset<0) return;
-    *(Q*)((char*)base+row.offset) = v;
-}
-
-template<typename T>
-void Model::Meta<T>::Set2(const QString& _name, const QString& vst){
-    if(!rows.contains(_name)) return;
-    Row& row = rows[_name];
-    if(row.offset<0) return;
-
-    QMetaType o0 = QMetaType::fromType<QString>();
-
-    bool ok = QMetaType::convert(o0, &vst, row.t, (char*)base+row.offset);
-}
