@@ -10,6 +10,7 @@
 #include "workerthread.h"
 #include <QMap>
 
+
 class DoWork: public QObject
 {
     Q_OBJECT

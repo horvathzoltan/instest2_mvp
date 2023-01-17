@@ -4,6 +4,8 @@
 #include <QJsonObject>
 #include <QString>
 
+#define AddRow2(x) AddRow<0>(#x, sizeof(x))
+
 namespace Model
 {       
     struct Device{
