@@ -1,6 +1,8 @@
 #ifndef META_H
 #define META_H
 
+//#include "logger.h"
+#include <QDateTime>
 #include <QMetaType>
 #include <QString>
 
@@ -45,8 +47,15 @@ struct Meta{
         if(!rows.contains(_name)) return false;
         Row& row = rows[_name];
         if(row.offset<0) return false;
-        QMetaType o0 = QMetaType::fromType<QString>();
-        return QMetaType::convert(o0, &vst, row.t, (char*)base+row.offset);
+        char* ptr = (char*)base+row.offset;
+        if(row.t.id() == QMetaType::Type::QDateTime)
+        {
+            QDateTime d = QDateTime::fromString(vst, "yyyy-MM-dd hh:mm:ss.zzz0000");
+            *(QDateTime*)ptr = d;
+            return d.isValid();
+        }
+        static QMetaType o0 = QMetaType::fromType<QString>();
+        return QMetaType::convert(o0, &vst, row.t, ptr);
     }
 };
 

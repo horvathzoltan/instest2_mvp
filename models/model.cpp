@@ -433,35 +433,49 @@ QList<Model::InsoleType> Model::InsoleType::ParseList(const QString &str)
 
 
 Model::InsoleType Model::InsoleType::Parse(const QString &str)
-{
-//    Model::InsoleType r;
-//    static auto meta = GetMeta();
-//    meta.base = &r;
-
+{    
+    static QStringList h_tokens = CSV_header.split(",");
+    static auto meta = GetMeta();
     Model::InsoleType r;
-    Meta<Model::InsoleType> meta(&r);
-    meta.AddRow(int,&r.Id); //0
-    meta.AddRow(QDateTime,&r.LastModified); //1
-    meta.AddRow(QString,&r.Name); //2
-    meta.AddRow(int,&r.InsoleGenderId); //3
-    meta.AddRow(int,&r.InsoleAgeCategoryId); //4
-    meta.AddRow(int,&r.InsoleSideId); //5
-    meta.AddRow(qreal,&r.EUSize); //6
-    meta.AddRow(QString,&r.GeometryCSV); //7
-    meta.AddRow(int,&r.R); //8
-    meta.AddRow(int,&r.VMax); //9
-    meta.AddRow(int,&r.VMin); //10
+    meta.base = &r;
 
-    QStringList h_tokens = CSV_header.split(",");        
+    QString g("2020-02-08 14:15:00.0000000");
+    QDateTime t = QDateTime::fromString(g, "yyyy-MM-dd hh:mm:ss.zzz0000");
 
-    QStringList tokens = str.split(",");
+    QStringList tokens;
+    bool in=false;
+    int ix0 = 0;
+    int L = str.length();
+    int MAX_IX = L-1;
+    for(int i=0;i<L;i++){
+        auto& a= str[i];
+        if(a=='\'') in=!in;
+        else if(!in)
+        {
+            if(i==MAX_IX) {
+                tokens.append(str.mid(ix0));
+            } else if(a==','){
+                tokens.append(str.mid(ix0,i-ix0));
+                ix0=i+1;
+            }
+        }
+    }
+
     if(tokens.length()<11) return r;
     if(tokens.length()<h_tokens.length()) return r;
     for(int i=0;i<h_tokens.length();i++){
         QString name = h_tokens[i];
         QString value = tokens[i];
-        if(name=="R"){
-            zInfo("R:"+value);
+
+        // nvarchar esetén
+        if(value.startsWith("N'") && value.endsWith('\''))
+        {
+            value = value.mid(2, value.length()-3);
+        }
+        // datetime esetén
+        else if(value.startsWith("'") && value.endsWith('\''))
+        {
+            value = value.mid(1, value.length()-2);
         }
         meta.Parse(name, value);
     }
