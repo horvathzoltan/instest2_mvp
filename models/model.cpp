@@ -482,21 +482,40 @@ Model::InsoleType Model::InsoleType::Parse(const QString &str)
     return r;
 }
 
+#define META_1(m, r) (m).AddRow(int,&(r).Id); \
+(m).AddRow(QDateTime,&(r).LastModified); \
+(m).AddRow(QString,&(r).Name); \
+(m).AddRow(int,&(r).InsoleGenderId); \
+(m).AddRow(int,&(r).InsoleAgeCategoryId); \
+(m).AddRow(int,&(r).InsoleSideId); \
+(m).AddRow(qreal,&(r).EUSize); \
+(m).AddRow(QString,&(r).GeometryCSV); \
+(m).AddRow(int,&(r).R); \
+(m).AddRow(int,&(r).VMax); \
+(m).AddRow(int,&(r).VMin);
+
 Meta<Model::InsoleType> Model::InsoleType::GetMeta()
 {
     Model::InsoleType r;
     Meta<Model::InsoleType> meta(&r);
-    meta.AddRow(int,&r.Id); //0
-    meta.AddRow(QDateTime,&r.LastModified); //1
-    meta.AddRow(QString,&r.Name); //2
-    meta.AddRow(int,&r.InsoleGenderId); //3
-    meta.AddRow(int,&r.InsoleAgeCategoryId); //4
-    meta.AddRow(int,&r.InsoleSideId); //5
-    meta.AddRow(qreal,&r.EUSize); //6
-    meta.AddRow(QString,&r.GeometryCSV); //7
-    meta.AddRow(int,&r.R); //8
-    meta.AddRow(int,&r.VMax); //9
-    meta.AddRow(int,&r.VMin); //10
+#ifdef META_1
+    META_1(meta, r)
+#else
+    zInfo("META_1 not defined");
+#endif
+//    meta.AddRow(int,&r.Id); //0
+//    meta.AddRow(QDateTime,&r.LastModified); //1
+//    meta.AddRow(QString,&r.Name); //2
+//    meta.AddRow(int,&r.InsoleGenderId); //3
+//    meta.AddRow(int,&r.InsoleAgeCategoryId); //4
+//    meta.AddRow(int,&r.InsoleSideId); //5
+//    meta.AddRow(qreal,&r.EUSize); //6
+//    meta.AddRow(QString,&r.GeometryCSV); //7
+//    meta.AddRow(int,&r.R); //8
+//    meta.AddRow(int,&r.VMax); //9
+//    meta.AddRow(int,&r.VMin); //10
     return meta;
 }
+
+/*cut here*/
 
