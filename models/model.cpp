@@ -496,7 +496,6 @@ m.AddRow(int,&r.R); \
 m.AddRow(int,&r.VMax); \
 m.AddRow(int,&r.VMin);
 
-
 Meta<Model::InsoleType> Model::InsoleType::GetMeta()
 {
 
@@ -506,6 +505,9 @@ Meta<Model::InsoleType> Model::InsoleType::GetMeta()
 #else
     zInfo("META_Model_InsoleType not defined");
 #endif
+}
+
+/*
 //Model::InsoleType r;
 //Meta<Model::InsoleType> meta(&r);
 //    Model::InsoleType r;
@@ -520,8 +522,8 @@ Meta<Model::InsoleType> Model::InsoleType::GetMeta()
 //    meta.AddRow(QString,&r.GeometryCSV); //7
 //    meta.AddRow(int,&r.R); //8
 //    meta.AddRow(int,&r.VMax); //9
-//    meta.AddRow(int,&r.VMin); //10    
-}
+//    meta.AddRow(int,&r.VMin); //10
+*/
 
 /*cut here*/
 
