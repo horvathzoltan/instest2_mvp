@@ -482,8 +482,8 @@ Model::InsoleType Model::InsoleType::Parse(const QString &str)
     return r;
 }
 
-#define META_Model_InsoleType(m, k) k r; \
-Meta<k> m(&r); \
+#define META_Model_InsoleType(m) Model::InsoleType r; \
+Meta<Model::InsoleType> m(&r); \
 m.AddRow(int,&r.Id); \
 m.AddRow(QDateTime,&r.LastModified); \
 m.AddRow(QString,&r.Name); \
@@ -500,7 +500,7 @@ Meta<Model::InsoleType> Model::InsoleType::GetMeta()
 {
 
 #ifdef META_Model_InsoleType
-    META_Model_InsoleType(model, Model::InsoleType)
+    META_Model_InsoleType(model)
     return model;
 #else
     zInfo("META_Model_InsoleType not defined");
