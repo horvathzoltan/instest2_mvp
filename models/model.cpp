@@ -7,7 +7,7 @@
 //    return QString::number(buildnum);
 //}
 
-const QString Model::InsoleType::CSV = R"((1,'2020-02-08 14:15:00.0000000',N'42Jobb',1,2,3,42.0,N'insole;channel;x;y;r;ratio
+const QString Model::InsoleType_Model::CSV = R"((1,'2020-02-08 14:15:00.0000000',N'42Jobb',1,2,3,42.0,N'insole;channel;x;y;r;ratio
 42j16sd;RIGHT;-1;-1;none;none
 42j16s;4;19;239;18.8;0.555556
 42j16s;5;49;235;18.2857;0.555556
@@ -410,14 +410,14 @@ const QString Model::InsoleType::CSV = R"((1,'2020-02-08 14:15:00.0000000',N'42J
 39b16sw;3;0,9;-1;none;none
 39b16sw;4;0,8;-1;none;none',1000,121,106)";
 
-const QString Model::InsoleType::CSV_header =
+const QString Model::InsoleType_Model::CSV_header =
         R"(Id,LastModified,Name,InsoleGenderId,InsoleAgeCategoryId,InsoleSideId,EUSize,GeometryCSV,R,VMax,VMin)";
 
-QList<Model::InsoleType> Model::InsoleType::ParseList(const QString &str)
+QList<Model::InsoleType_Model> Model::InsoleType_Model::ParseList(const QString &str)
 {
     QStringList tokens = str.split(",\n");
 
-    QList<Model::InsoleType> r;
+    QList<Model::InsoleType_Model> r;
     for(auto&token:tokens){
         int ix1 = token.indexOf(QChar('('));
         int ix2 = token.lastIndexOf(QChar(')'));
@@ -425,20 +425,20 @@ QList<Model::InsoleType> Model::InsoleType::ParseList(const QString &str)
         int length = ix2-ix1-1;
         token = token.mid(ix,length);
         //zInfo("token:"+token);
-        InsoleType insoleType = Parse(token);
+        InsoleType_Model insoleType = Parse(token);
         r.append(insoleType);
     }
     return r;
 }
 
 
-Model::InsoleType Model::InsoleType::Parse(const QString &str)
+Model::InsoleType_Model Model::InsoleType_Model::Parse(const QString &str)
 {
-    Model::InsoleType r;
+    Model::InsoleType_Model r;
 
     QStringList h_tokens = CSV_header.split(",");
 
-    Meta<Model::InsoleType> meta(&r);
+    Meta<Model::InsoleType_Model> meta(&r);
     meta.AddRow<int>(&r.Id, "Id"); //0
     meta.AddRow<QDateTime>(&r.LastModified, "LastModified"); //1
     meta.AddRow<QString>(&r.Name, "Name"); //2

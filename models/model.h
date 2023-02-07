@@ -41,7 +41,7 @@ namespace Model
         void Set2(const QString& _name, const QString& v);
     };
 
-    struct InsoleType{
+    struct InsoleType_Model{
         static const QString CSV;
         static const QString CSV_header;
         int Id;
@@ -56,8 +56,8 @@ namespace Model
         int VMax;
         int VMin;
 
-        static QList<InsoleType> ParseList(const QString& str);
-        static InsoleType Parse(const QString& str);
+        static QList<InsoleType_Model> ParseList(const QString& str);
+        static InsoleType_Model Parse(const QString& str);
     };
 //    struct Data{
 //            //ApiVer apiVer;

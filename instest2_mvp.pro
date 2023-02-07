@@ -44,6 +44,7 @@ HEADERS += \
     mainwindow.h \
     models/commandlineargs.h \
     models/model.h \
+    models/model_meta.h \
     models/responsemodel.h \
     models/settings.h \
     models/viewmodel.h \
