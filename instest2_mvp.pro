@@ -17,6 +17,7 @@ SOURCES += \
     helpers/filenamehelper.cpp \
     helpers/htmlhelper.cpp \
     helpers/httphelper.cpp \
+    helpers/meta.cpp \
     helpers/textfilehelper.cpp \
     ipscanner.cpp \
     logger.cpp \
@@ -35,6 +36,7 @@ HEADERS += \
     helpers/filenamehelper.h \
     helpers/htmlhelper.h \
     helpers/httphelper.h \
+    helpers/meta.h \
     helpers/textfilehelper.h \
     imainview.h \
     ipscanner.h \
