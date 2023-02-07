@@ -14,4 +14,5 @@ m.AddRow(int,&r.R); \
 m.AddRow(int,&r.VMax); \
 m.AddRow(int,&r.VMin); \
 m.AddRow(static,&r.QList<InsoleType_Model>); \
-m.AddRow(static,&r.InsoleType_Model);
+m.AddRow(static,&r.InsoleType_Model); \
+m.AddRow(static,&r.Meta<Model::InsoleType_Model>);

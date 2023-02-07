@@ -435,55 +435,56 @@ QList<Model::InsoleType_Model> Model::InsoleType_Model::ParseList(const QString 
 
 Model::InsoleType_Model Model::InsoleType_Model::Parse(const QString &str)
 {    
-    Model::InsoleType_Model r;
-    static auto meta = GetMeta();
-    meta.base = &r;
+    static QStringList h_tokens = CSV_header.split(",");
+      static auto meta = GetMeta();
+      Model::InsoleType_Model r;
+      meta.base = &r;
 
-    QString g("2020-02-08 14:15:00.0000000");
-    QDateTime t = QDateTime::fromString(g, "yyyy-MM-dd hh:mm:ss.zzz0000");
+      QString g("2020-02-08 14:15:00.0000000");
+      QDateTime t = QDateTime::fromString(g, "yyyy-MM-dd hh:mm:ss.zzz0000");
 
-    Meta<Model::InsoleType_Model> meta(&r);
-    bool in=false;
-    int ix0 = 0;
-    int L = str.length();
-    int MAX_IX = L-1;
-    for(int i=0;i<L;i++){
-        auto& a= str[i];
-        if(a=='\'') in=!in;
-        else if(!in)
-        {
-            if(i==MAX_IX) {
-                tokens.append(str.mid(ix0));
-            } else if(a==','){
-                tokens.append(str.mid(ix0,i-ix0));
-                ix0=i+1;
-            }
-        }
-    }
+      QStringList tokens;
+      bool in=false;
+      int ix0 = 0;
+      int L = str.length();
+      int MAX_IX = L-1;
+      for(int i=0;i<L;i++){
+          auto& a= str[i];
+          if(a=='\'') in=!in;
+          else if(!in)
+          {
+              if(i==MAX_IX) {
+                  tokens.append(str.mid(ix0));
+              } else if(a==','){
+                  tokens.append(str.mid(ix0,i-ix0));
+                  ix0=i+1;
+              }
+          }
+      }
 
-    if(tokens.length()<11) return r;
-    if(tokens.length()<h_tokens.length()) return r;
-    for(int i=0;i<h_tokens.length();i++){
-        QString name = h_tokens[i];
-        QString value = tokens[i];
+      if(tokens.length()<11) return r;
+      if(tokens.length()<h_tokens.length()) return r;
+      for(int i=0;i<h_tokens.length();i++){
+          QString name = h_tokens[i];
+          QString value = tokens[i];
 
-        // nvarchar esetén
-        if(value.startsWith("N'") && value.endsWith('\''))
-        {
-            value = value.mid(2, value.length()-3);
-        }
-        // datetime esetén
-        else if(value.startsWith("'") && value.endsWith('\''))
-        {
-            value = value.mid(1, value.length()-2);
-        }
-        meta.Parse(name, value);
-    }
-    return r;
+          // nvarchar esetén
+          if(value.startsWith("N'") && value.endsWith('\''))
+          {
+              value = value.mid(2, value.length()-3);
+          }
+          // datetime esetén
+          else if(value.startsWith("'") && value.endsWith('\''))
+          {
+              value = value.mid(1, value.length()-2);
+          }
+          meta.Parse(name, value);
+      }
+      return r;
 }
 
-#define META_Model_InsoleType(m) Model::InsoleType r; \
-Meta<Model::InsoleType> m(&r); \
+#define META_Model_InsoleType(m) Model::InsoleType_Model r; \
+Meta<Model::InsoleType_Model> m(&r); \
 m.AddRow(int,&r.Id); \
 m.AddRow(QDateTime,&r.LastModified); \
 m.AddRow(QString,&r.Name); \
@@ -496,7 +497,7 @@ m.AddRow(int,&r.R); \
 m.AddRow(int,&r.VMax); \
 m.AddRow(int,&r.VMin);
 
-Meta<Model::InsoleType> Model::InsoleType::GetMeta()
+Meta<Model::InsoleType_Model> Model::InsoleType_Model::GetMeta()
 {
 
 #ifdef META_Model_InsoleType

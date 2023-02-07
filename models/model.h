@@ -33,7 +33,7 @@ namespace Model
 
         static QList<InsoleType_Model> ParseList(const QString& str);
         static InsoleType_Model Parse(const QString& str);
-        static Meta<Model::InsoleType> GetMeta();
+        static Meta<Model::InsoleType_Model> GetMeta();
     };
 };
 
