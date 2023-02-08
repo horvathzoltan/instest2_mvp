@@ -1,4 +1,6 @@
 #include "model.h"
+#include "model_meta.h"
+
 #include "logger.h"
 #include "helpers/meta.h"
 
@@ -8,7 +10,7 @@
 //    return QString::number(buildnum);
 //}
 
-const QString Model::InsoleType_Model::CSV = R"((1,'2020-02-08 14:15:00.0000000',N'42Jobb',1,2,3,42.0,N'insole;channel;x;y;r;ratio
+const QString Model::InsoleType::CSV = R"((1,'2020-02-08 14:15:00.0000000',N'42Jobb',1,2,3,42.0,N'insole;channel;x;y;r;ratio
 42j16sd;RIGHT;-1;-1;none;none
 42j16s;4;19;239;18.8;0.555556
 42j16s;5;49;235;18.2857;0.555556
@@ -71,7 +73,7 @@ const QString Model::InsoleType_Model::CSV = R"((1,'2020-02-08 14:15:00.0000000'
 42j16sw;14;0.5;-1;none;none
 42j16sw;10;1;-1;none;none
 42j16sw;9;0.9;-1;none;none
-42j16sw;13;0.6;-1;none;none
+42j16sw;13;0.6;-1;none;noneMETA_Model_InsoleType
 42j16sw;8;1.4;-1;none;none
 42j16sw;12;0.8;-1;none;none',390,53,46),
      (2,'2020-02-08 14:20:00.0000000',N'42Bal',1,2,4,42.0,N'insole;channel;x;y;r;ratio
@@ -91,7 +93,7 @@ const QString Model::InsoleType_Model::CSV = R"((1,'2020-02-08 14:15:00.0000000'
 42b16s;5;37;47;15.3333;0.695652
 42b16s;3;69;24;10;0.526316
 42b16s;4;44;19;10.6;0.947368
-42b16sf;none;62;275;none;none
+42b16sf;none;62;275;none;noneMETA_Model_InsoleType
 42b16sf;none;62;275;none;none
 42b16sf;none;52;278;none;none
 42b16sf;none;43;278;none;none
@@ -411,14 +413,14 @@ const QString Model::InsoleType_Model::CSV = R"((1,'2020-02-08 14:15:00.0000000'
 39b16sw;3;0,9;-1;none;none
 39b16sw;4;0,8;-1;none;none',1000,121,106)";
 
-const QString Model::InsoleType_Model::CSV_header =
+const QString Model::InsoleType::CSV_header =
         R"(Id,LastModified,Name,InsoleGenderId,InsoleAgeCategoryId,InsoleSideId,EUSize,GeometryCSV,R,VMax,VMin)";
 
-QList<Model::InsoleType_Model> Model::InsoleType_Model::ParseList(const QString &str)
+QList<Model::InsoleType> Model::InsoleType::ParseList(const QString &str)
 {
     QStringList tokens = str.split(",\n");
 
-    QList<Model::InsoleType_Model> r;
+    QList<Model::InsoleType> r;
     for(auto&token:tokens){
         int ix1 = token.indexOf(QChar('('));
         int ix2 = token.lastIndexOf(QChar(')'));
@@ -426,18 +428,18 @@ QList<Model::InsoleType_Model> Model::InsoleType_Model::ParseList(const QString 
         int length = ix2-ix1-1;
         token = token.mid(ix,length);
         //zInfo("token:"+token);
-        InsoleType_Model insoleType = Parse(token);
+        InsoleType insoleType = Parse(token);
         r.append(insoleType);
     }
     return r;
 }
 
 
-Model::InsoleType_Model Model::InsoleType_Model::Parse(const QString &str)
+Model::InsoleType Model::InsoleType::Parse(const QString &str)
 {    
     static QStringList h_tokens = CSV_header.split(",");
       static auto meta = GetMeta();
-      Model::InsoleType_Model r;
+      Model::InsoleType r;
       meta.base = &r;
 
       QString g("2020-02-08 14:15:00.0000000");
@@ -483,8 +485,8 @@ Model::InsoleType_Model Model::InsoleType_Model::Parse(const QString &str)
       return r;
 }
 
-#define META_Model_InsoleType(m) Model::InsoleType_Model r; \
-Meta<Model::InsoleType_Model> m(&r); \
+#define MET3A_Model_InsoleType(m) Model::InsoleType r; \
+Meta<Model::InsoleType> m(&r); \
 m.AddRow(int,&r.Id); \
 m.AddRow(QDateTime,&r.LastModified); \
 m.AddRow(QString,&r.Name); \
@@ -497,7 +499,7 @@ m.AddRow(int,&r.R); \
 m.AddRow(int,&r.VMax); \
 m.AddRow(int,&r.VMin);
 
-Meta<Model::InsoleType_Model> Model::InsoleType_Model::GetMeta()
+Meta<Model::InsoleType> Model::InsoleType::GetMeta()
 {
 
 #ifdef META_Model_InsoleType

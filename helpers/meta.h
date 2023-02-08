@@ -9,6 +9,8 @@
 #define AddRow(y,x) __brummabrumma<y>(x, MetaHelper_GetRowName(#x))
 QString MetaHelper_GetRowName(const QString &n);
 
+#define META
+
 template<typename T>
 struct Meta{
     struct Row{

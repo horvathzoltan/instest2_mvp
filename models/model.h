@@ -16,7 +16,8 @@ namespace Model
         QString toString() const;
     };
 
-    struct InsoleType_Model{
+    struct InsoleType{
+        META
         static const QString CSV;
         static const QString CSV_header;
         int Id;
@@ -31,9 +32,9 @@ namespace Model
         int VMax;
         int VMin;
 
-        static QList<InsoleType_Model> ParseList(const QString& str);
-        static InsoleType_Model Parse(const QString& str);
-        static Meta<Model::InsoleType_Model> GetMeta();
+        static QList<InsoleType> ParseList(const QString& str);
+        static InsoleType Parse(const QString& str);
+        static Meta<Model::InsoleType> GetMeta();
     };
 };
 
