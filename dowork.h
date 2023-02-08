@@ -5,7 +5,7 @@
 #include <models/responsemodel.h>
 #include <models/settings.h>
 #include <models/viewmodel.h>
-#include "models/commandlineargs.h"
+//#include "models/commandlineargs.h"
 #include "helpers/httphelper.h"
 #include "workerthread.h"
 #include <QMap>
@@ -16,7 +16,7 @@ class DoWork: public QObject
     Q_OBJECT
 private:
     static const QString APIVER;
-
+    static QList<Model::InsoleType> _insoleTypes;
 
     //enum GetRequestType{checkin, apiver};
 public:
@@ -45,6 +45,8 @@ public:
 
     void StartFindPiThread(FindPiThread::Model m, QUuid guid);
 
+    Model::InsoleType* GetInsoleTypeR(int r);
+    Model::InsoleType* GetInsoleType(int v);
 private:
     bool _isInited = false;
 

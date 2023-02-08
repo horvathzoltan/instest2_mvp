@@ -11,7 +11,7 @@
 #include "ipscanner.h"
 
 const QString DoWork::APIVER = QStringLiteral("apiver");
-
+QList<Model::InsoleType> DoWork::_insoleTypes;
 
 DoWork::DoWork(QObject *parent) :QObject(parent)
 {
@@ -20,6 +20,8 @@ DoWork::DoWork(QObject *parent) :QObject(parent)
 
 auto DoWork::init(const DoWorkInit& m) -> bool
 {
+    Q_UNUSED(m)
+
     _isInited = false;
 
 //    if(!_httpHelper.init(m.settings._host, m.settings._port)) return _isInited;
@@ -27,7 +29,7 @@ auto DoWork::init(const DoWorkInit& m) -> bool
     //QObject::connect(&httpHelper, SIGNAL(ResponseOk(QUuid,QString,QByteArray)),
     //                 this, SLOT(ResponseOkAction(QUuid,QString,QByteArray)));
 
-    auto l = Model::InsoleType::ParseList(Model::InsoleType::CSV);
+    _insoleTypes = Model::InsoleType::ParseList(Model::InsoleType::CSV);
     _isInited = true;    
     return true;
 }
@@ -210,4 +212,14 @@ void DoWork::CheckReady()
 //}
 
 
+Model::InsoleType* DoWork::GetInsoleTypeR(int r){
+    for(auto&insoleType:_insoleTypes)
+        if(insoleType.R==r) return &insoleType;
+    return nullptr;
+}
 
+Model::InsoleType* DoWork::GetInsoleType(int v){
+    for(auto&insoleType:_insoleTypes)
+        if(insoleType.VMin<=v && v<=insoleType.VMax) return &insoleType;
+    return nullptr;
+}
