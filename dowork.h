@@ -59,18 +59,13 @@ private:
         QString name;
         int buildnum;
         int datalength;
-        QString data;
+        //QString data;
+        Model::InsoleData insoleData;
+        Model::InsoleType* insoleType;
         //int insoletypeV
         //int[] prssures
 
-        QString toString(){
-            QString msg =  name
-                    +","+QString::number(buildnum)
-                    +","+(checked?"ok":"Nok")
-                    +","+QString::number(datalength);
-                    //+","+data;
-            return msg;
-        }
+        QString toString();
     };
 
     QUuid _findPiPresenterGuid;

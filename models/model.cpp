@@ -494,4 +494,46 @@ Meta<Model::InsoleType> Model::InsoleType::GetMeta()
 #endif
 }
 
+QString Model::InsoleType::toString()
+{
+    return Name+": "+QString::number(this->EUSize)+","+QString::number(this->InsoleSideId);
+}
 
+
+Model::InsoleData Model::InsoleData::Parse(const QByteArray& a, int dataLength)
+{
+    int pressuresLength = dataLength-1;
+    Model::InsoleData d;
+    int j = 0;
+    int k = 0;
+    if (dataLength < 1) return d;
+    int y = 0;
+    int L = a.length();
+    d.pressures.resize(pressuresLength);
+
+    for (int i = 0; i < L; i++)
+    {
+        auto b =a[i];
+        if (b == ';')
+        {
+            if(j==0) {
+                d.V = y;
+            } else{
+                d.pressures[k++]=y;
+            }
+            j++;
+            if (j >= dataLength) break;
+            y = 0;
+            continue;
+        }
+        y = (y * 10) + (b - '0');
+    }
+    if (j < dataLength){
+        if(j==0) {
+            d.V = y;
+        } else{
+            d.pressures[k++]=y;
+        }
+    }
+    return d;
+}

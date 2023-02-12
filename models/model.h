@@ -8,6 +8,10 @@
 
 namespace Model
 {       
+    enum PhysDirection : int {
+        Undefined = -1, Front = 1, Back, Right, Left
+    };
+
     struct Device{
         QString address = "";
         bool connected = false;
@@ -35,7 +39,15 @@ namespace Model
         static QList<InsoleType> ParseList(const QString& str);
         static InsoleType Parse(const QString& str);
         static Meta<Model::InsoleType> GetMeta();
-    };        
+        QString toString();
+    };
+
+    struct InsoleData{
+        int V;
+        QVarLengthArray<int> pressures;
+
+        static InsoleData Parse(const QByteArray& str, int dataLength);
+    };
 };
 
 #endif // MODELS_H

@@ -35,7 +35,7 @@ auto DoWork::init(const DoWorkInit& m) -> bool
 }
 
 ResponseModel::FindPi DoWork::FindPi(const QSet<int>& ports, int timeout)
-{   
+{       
     _findPiPresenterGuid=QUuid::createUuid();
     ResponseModel::FindPi r(_findPiPresenterGuid);
 
@@ -97,7 +97,7 @@ void DoWork::FindPiThreadResults(const FindPiThread::Result& m)
         // response err
         zInfo("trying: "+key);
         QUuid actionKey = h->GetAction("version");
-        _actions.insert(actionKey, key);
+        _actions.insert(actionKey, key);        
     }
     // ha van pi, kérjük le a típust, és a talpbetétet!
 }
@@ -118,17 +118,18 @@ void DoWork::ResponseNotOkAction(const QUuid& guid, const QString& action,  QByt
     }
 }
 
-void DoWork::ResponseOkAction(const QUuid& guid, const QString& action,  QByteArray s)
+void DoWork::ResponseOkAction(const QUuid& guid, const QString& action,  QByteArray response)
 {
     if(_actions.contains(guid)){
         auto insoleApiKey = _actions[guid];
         auto& insoleApi = _insoleApis[insoleApiKey];
         insoleApi.checked=true;
         insoleApi.isError=false;
-        auto responseString = QString(s);
+        //auto responseString = QString(s);
         //zInfo("ResponseOkAction: "+a+": "+responseString);
         if(action=="version") //pizero_mcp3008_api:1488
         {
+            auto responseString = QString(response);
             zInfo("version: "+insoleApiKey+": "+responseString);
             QStringList r = responseString.split(':');
             if(r.length()>=2)
@@ -148,6 +149,7 @@ void DoWork::ResponseOkAction(const QUuid& guid, const QString& action,  QByteAr
         }
         else if(action=="get_data_length") //get_data_length 16
         {
+            auto responseString = QString(response);
             zInfo("get_data_length: "+insoleApiKey+": "+responseString);
             bool ok;
             auto v = responseString.toInt(&ok);
@@ -161,8 +163,10 @@ void DoWork::ResponseOkAction(const QUuid& guid, const QString& action,  QByteAr
 
         else if(action=="get_data") //50;138;142;121;122;123;121;123;124;121;132;141;123;119;122;123
         {
-            zInfo("get_data: "+insoleApiKey+": "+responseString);
-            insoleApi.data = responseString;
+            //zInfo("get_data: "+insoleApiKey+": "+responseString);
+            insoleApi.insoleData = Model::InsoleData::Parse(response, insoleApi.datalength);
+
+            insoleApi.insoleType = GetInsoleType(insoleApi.insoleData.V);
 
             QString msg = insoleApi.toString();
             zInfo("insoleApi: "+msg);
@@ -222,4 +226,16 @@ Model::InsoleType* DoWork::GetInsoleType(int v){
     for(auto&insoleType:_insoleTypes)
         if(insoleType.VMin<=v && v<=insoleType.VMax) return &insoleType;
     return nullptr;
+}
+
+QString DoWork::InsoleApi::toString(){
+    QString msg =  name
+            +","+QString::number(buildnum)
+            +","+(checked?"ok":"Nok")
+            +","+QString::number(datalength);
+    //+","+data;
+    if(insoleType!=nullptr){
+        msg+=' '+insoleType->toString();
+    }
+    return msg;
 }
