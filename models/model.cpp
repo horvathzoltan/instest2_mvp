@@ -416,6 +416,11 @@ const QString Model::InsoleType::CSV = R"((1,'2020-02-08 14:15:00.0000000',N'42J
 const QString Model::InsoleType::CSV_header =
         R"(Id,LastModified,Name,InsoleGenderId,InsoleAgeCategoryId,InsoleSideId,EUSize,GeometryCSV,R,VMax,VMin)";
 
+Model::PhysDirection::Directions Model::InsoleType::direction()
+{
+    return PhysDirection::ToPhysDirection(InsoleSideId);
+}
+
 QList<Model::InsoleType> Model::InsoleType::ParseList(const QString &str)
 {
     QStringList tokens = str.split(",\n");
@@ -478,6 +483,7 @@ Model::InsoleType Model::InsoleType::Parse(const QString &str)
         }
         meta.Parse(name, value);
     }
+    //r.direction = PhysDirection::ToPhysDirection(r.InsoleSideId);
     return r;
 }
 
@@ -496,7 +502,9 @@ Meta<Model::InsoleType> Model::InsoleType::GetMeta()
 
 QString Model::InsoleType::toString()
 {
-    return Name+": "+QString::number(this->EUSize)+","+QString::number(this->InsoleSideId);
+    PhysDirection::Directions direction = this->direction();
+    QString d = PhysDirection::toString(direction);
+    return Name+": "+QString::number(this->EUSize)+","+d;
 }
 
 
@@ -536,4 +544,18 @@ Model::InsoleData Model::InsoleData::Parse(const QByteArray& a, int dataLength)
         }
     }
     return d;
+}
+
+Model::PhysDirection::Directions Model::PhysDirection::ToPhysDirection(int i)
+{
+    auto d = static_cast<Directions>(i);
+    return d;
+}
+
+QString Model::PhysDirection::toString(Directions d){
+    switch(d){
+    case Directions::Left: return nameof(Left);
+    case Directions::Right: return nameof(Right);
+    default: return "";
+    }
 }

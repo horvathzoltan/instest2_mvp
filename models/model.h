@@ -6,10 +6,19 @@
 #include <QJsonObject>
 #include <QString>
 
+#define nameof(x) nameof2(#x, sizeof(x))
+#define nameof2(x,y) QStringLiteral(x);void(y)
+
 namespace Model
 {       
-    enum PhysDirection : int {
-        Undefined = -1, Front = 1, Back, Right, Left
+    class PhysDirection{
+    public:
+        enum Directions : int {
+            Undefined = -1, Front = 1, Back, Right, Left
+        };
+
+        static Directions ToPhysDirection(int i);
+        static QString toString(Directions d);
     };
 
     struct Device{
@@ -35,6 +44,9 @@ namespace Model
         int R;
         int VMax;
         int VMin;
+
+        //PhysDirection::Directions direction;
+        PhysDirection::Directions direction();
 
         static QList<InsoleType> ParseList(const QString& str);
         static InsoleType Parse(const QString& str);
