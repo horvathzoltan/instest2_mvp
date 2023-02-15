@@ -30,7 +30,8 @@ auto DoWork::init(const DoWorkInit& m) -> bool
     //                 this, SLOT(ResponseOkAction(QUuid,QString,QByteArray)));
 
     _insoleTypes = Model::InsoleType::ParseList(Model::InsoleType::CSV);
-    _isInited = true;    
+    _isInited = true;
+
     return true;
 }
 
@@ -74,7 +75,8 @@ void DoWork::FindPiThreadResults(const FindPiThread::Result& m)
             str+=QString::number(v);
         };
         auto txt = "ip:" + key + ":" +str;
-        r.iplist.append(txt);
+
+        //r.iplist.append(txt);
         zInfo("pi found: "+txt);
     }
 
@@ -100,6 +102,15 @@ void DoWork::FindPiThreadResults(const FindPiThread::Result& m)
         _actions.insert(actionKey, key);        
     }
     // ha van pi, kérjük le a típust, és a talpbetétet!
+}
+
+DoWork::InsoleApi* DoWork::GetApi(const QString &key)
+{
+    QMap<QString, InsoleApi>::iterator a = _insoleApis.find(key);
+    if(a==_insoleApis.end()) return nullptr;
+    auto c = &a.value();
+
+    return c;
 }
 
 
@@ -154,7 +165,6 @@ void DoWork::ResponseOkAction(const QUuid& guid, const QString& action,  QByteAr
             bool ok;
             auto v = responseString.toInt(&ok);
             if (ok) {
-
                 insoleApi.datalength = v;
                 QUuid actionKey = insoleApi.httpHelper->GetAction("get_data");
                 _actions.insert(actionKey, insoleApiKey);
@@ -163,7 +173,6 @@ void DoWork::ResponseOkAction(const QUuid& guid, const QString& action,  QByteAr
 
         else if(action=="get_data") //50;138;142;121;122;123;121;123;124;121;132;141;123;119;122;123
         {
-            //zInfo("get_data: "+insoleApiKey+": "+responseString);
             insoleApi.insoleData = Model::InsoleData::Parse(response, insoleApi.datalength);
 
             insoleApi.insoleType = GetInsoleType(insoleApi.insoleData.V);
@@ -171,32 +180,56 @@ void DoWork::ResponseOkAction(const QUuid& guid, const QString& action,  QByteAr
             QString msg = insoleApi.toString();
             zInfo("insoleApi: "+msg);
 
-            // ha minden api adott választ- ok, vagy err
-            CheckReady();
+            // ha egy api válaszol, lecsekkoljuk, hogy van-e még aki nem
+            // ha mindegyik válaszolt, akkor ok, készen vagyunk
+            bool ok = CheckReady();
+            if(ok)
+            {
+                ResponseModel::FindPi r = CheckReady2();
+                emit ResponseFindPi(r);
+            }
         }
     }
-    //if(action==APIVER) GetApiverResponse(guid,s);
-    //else
-
 }
-
-void DoWork::CheckReady()
+// lecsekkolja az apikat, ha mind válaszolt, akkor ok
+bool DoWork::CheckReady()
 {
-    ResponseModel::FindPi r(_findPiPresenterGuid);
     int checkedApiCounter = 0;
 
     for(auto&key:_insoleApis.keys())
     {
         auto& api = _insoleApis[key];
-        if(!api.checked) return; // ha van olyan api ami nem volt még csekkolva
+        if(!api.checked) return false; // ha van olyan api ami nem volt még csekkolva
         checkedApiCounter++;
-        if(api.isError) continue;
-        QString msg = api.toString();
-        r.iplist.append(msg);
+        if(api.isError) continue;        
     }
-    if(checkedApiCounter>0) emit ResponseFindPi(r);
+    bool ok = checkedApiCounter>0;
+    return ok;
 }
 
+ResponseModel::FindPi DoWork::CheckReady2()
+{
+    ResponseModel::FindPi r(_findPiPresenterGuid);
+
+    for(auto&key:_insoleApis.keys())
+    {
+        auto& api = _insoleApis[key];
+        if(api.isError) continue;
+        QString msg = api.toString();
+        if(api.insoleType!=nullptr)
+        {
+            auto d = api.insoleType->direction();
+            switch(d){
+            case Model::PhysDirection::Left: r.apiKey_L.append(key); break;
+            case Model::PhysDirection::Right: r.apiKey_R.append(key); break;
+            default: r.apiKey_U.append(key); break;
+            }
+        } else {
+            r.apiKey_E.append(key);
+        }
+    }
+    return r;
+}
 
 //void DoWork::GetApiverResponse(const QUuid& guid, QByteArray s){
 //    QJsonParseError errorPtr;

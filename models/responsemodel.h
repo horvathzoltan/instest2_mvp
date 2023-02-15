@@ -19,7 +19,11 @@ namespace ResponseModel{
 
     struct FindPi: public Base{
         FindPi(const QUuid _guid):Base(_guid){};
-        QStringList iplist;
+        bool ok;
+        QStringList apiKey_L;
+        QStringList apiKey_R;
+        QStringList apiKey_U; // van, de nem L/R
+        QStringList apiKey_E; // nincs
     };
 
 };

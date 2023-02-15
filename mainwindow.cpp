@@ -7,7 +7,7 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    ui->label->setText("started");
+    ui->label_L->setText("started");
     //setPage(ViewModel::Page::main);
     _timer.setParent(this);
     QObject::connect(&_timer, &QTimer::timeout, this, &MainWindow::onTimerTimeout);
@@ -28,15 +28,22 @@ void MainWindow::on_pushButton_clicked()
 
 void MainWindow::set_ApiverView(const ViewModel::FindPi &m)
 {
-    if(!m.hosts.isEmpty())
+    if(m.message_L.isEmpty())
     {
-        QString hosts = m.hosts.join('\n');
-        ui->label->setText(hosts);
+        ui->label_L->clear();
     }
-    else{
-        ui->label->clear();
+    else
+    {
+        ui->label_L->setText(m.message_L);
     }
-    ui->label_2->setText(m.message);
+    if(m.message_R.isEmpty())
+    {
+        ui->label_R->clear();
+    }
+    else
+    {
+        ui->label_R->setText(m.message_R);
+    }
 }
 
 void MainWindow::onTimerTimeout()

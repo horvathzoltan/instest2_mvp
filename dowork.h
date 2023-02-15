@@ -9,7 +9,7 @@
 #include "helpers/httphelper.h"
 #include "workerthread.h"
 #include <QMap>
-
+#include "models/model.h"
 
 class DoWork: public QObject
 {
@@ -47,6 +47,7 @@ public:
 
     Model::InsoleType* GetInsoleTypeR(int r);
     Model::InsoleType* GetInsoleType(int v);
+
 private:
     bool _isInited = false;
 
@@ -73,7 +74,8 @@ private:
     QMap<QUuid, QString> _actions;
     //Model::Data _data;
 
-    void CheckReady();
+    bool CheckReady();
+    ResponseModel::FindPi CheckReady2();
    // void GetApiverResponse(const QUuid& guid, QByteArray s);
 
 // (wiew)action -> (presenter)processAction -> [ (dowork)ResponseAction -> (presenter)onResponseAction -> ] (wiew)set_view
@@ -87,6 +89,9 @@ private slots:
     void ResponseOkAction(const QUuid& guid, const QString& action, QByteArray s);
     void ResponseNotOkAction(const QUuid& guid, const QString& action, QByteArray s);
     void FindPiThreadResults(const FindPiThread::Result &s);
+
+public:
+    InsoleApi* GetApi(const QString& key);
 };
 
 #endif // DOWORK_H

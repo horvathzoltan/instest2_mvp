@@ -50,19 +50,40 @@ void MainPresenter::initView(IMainView *w) const {
 void MainPresenter::processGetApiverAction(IMainView *sender){
     ResponseModel::FindPi r = _dowork.FindPi({8080}, 30);
     _senders.insert(r.guid,sender);
-    ViewModel::FindPi vm;
-    vm.message = r.message;
+    ViewModel::FindPi vm
+    {
+        .message_L = r.message,
+        .message_R = {}
+    };
     sender->set_ApiverView(vm);
 }
 
 void MainPresenter::onResponseFindPi(ResponseModel::FindPi m)
 {
-    if(_senders.contains(m.guid)){
-        ViewModel::FindPi vm = {.message = m.message, .hosts=m.iplist };
-        _senders[m.guid]->set_ApiverView(vm);
-        // ha a request ready, azaz nem jön több művelet
-        //_senders.remove(m.guid);
+    if(!_senders.contains(m.guid)) return;
+    ViewModel::FindPi vm;
+    for(auto&key:m.apiKey_L)
+    {
+        if(vm.message_L.isEmpty()) vm.message_L+='\n';
+        auto api = _dowork.GetApi(key);
+        if(api)
+        {
+            vm.message_L+=api->toString();
+        }
     }
+    for(auto&key:m.apiKey_R)
+    {
+        if(vm.message_R.isEmpty()) vm.message_R+='\n';
+        auto api = _dowork.GetApi(key);
+        if(api)
+        {
+            vm.message_R+=api->toString();
+        }
+    }
+
+    _senders[m.guid]->set_ApiverView(vm);
+    // ha a request ready, azaz nem jön több művelet
+    //_senders.remove(m.guid); // első körben is ezt küldjük, nem törölhetjük ki csak a keresés folyamat végén, ha a státusz ok lesz
 }
 
 

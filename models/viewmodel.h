@@ -1,24 +1,15 @@
 #ifndef VIEWMODEL_H
 #define VIEWMODEL_H
 
-#include "model.h"
-
 #include <QPixmap>
 #include <QString>
 
-
 namespace ViewModel
 {    
-
     struct FindPi{
-        QString message;
-        QStringList hosts;
+        QString message_L;
+        QString message_R;
     };  
-
-    struct Device{
-        Model::Device device;
-    };
-
 };
 
 #endif // VIEWMODEL_H
