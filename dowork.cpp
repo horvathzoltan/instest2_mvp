@@ -270,6 +270,7 @@ void DoWork::onTimeout_R()
     onTimeout(Model::PhysDirection::Directions::Right);
 }
 
+//https://stackoverflow.com/questions/15835267/qthread-and-qtimer
 void DoWork::onTimeout(Model::PhysDirection::Directions d)
 {
     ResponseModel::PiData r(_findPiPresenterGuid);
