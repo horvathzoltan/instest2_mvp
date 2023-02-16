@@ -15,7 +15,10 @@ QList<Model::InsoleType> DoWork::_insoleTypes;
 
 DoWork::DoWork(QObject *parent) :QObject(parent)
 {
-
+    timer_L.setInterval(32);
+    timer_R.setInterval(32);
+    connect(&timer_L, &QTimer::timeout, this, &DoWork::onTimeout_L);
+    connect(&timer_R, &QTimer::timeout, this, &DoWork::onTimeout_R);
 }
 
 auto DoWork::init(const DoWorkInit& m) -> bool
@@ -35,10 +38,16 @@ auto DoWork::init(const DoWorkInit& m) -> bool
     return true;
 }
 
-ResponseModel::FindPi DoWork::FindPi(const QSet<int>& ports, int timeout)
+ResponseModel::FindPi DoWork::FindPi(const QSet<int>& ports, int timeout, int steps)
 {       
     _findPiPresenterGuid=QUuid::createUuid();
     ResponseModel::FindPi r(_findPiPresenterGuid);
+
+    _insoleApis.clear();
+    _apiKey_L.clear();
+    _apiKey_R.clear();
+    timer_L.stop();
+    timer_R.stop();
 
     //FindPiModelR result;
 
@@ -49,7 +58,7 @@ ResponseModel::FindPi DoWork::FindPi(const QSet<int>& ports, int timeout)
     }
     else
     {
-        FindPiThread::Model m(a.first(), ports, timeout);
+        FindPiThread::Model m(a.first(), ports, timeout, steps);
         StartFindPiThread(m, _findPiPresenterGuid);
         r.message= QStringLiteral("searching...");
     }
@@ -80,6 +89,7 @@ void DoWork::FindPiThreadResults(const FindPiThread::Result& m)
         zInfo("pi found: "+txt);
     }
 
+    r.status=ResponseModel::FindPi::Started;
     emit ResponseFindPi(r);
 
     for(auto&key:m.ipList.keys()){
@@ -94,8 +104,8 @@ void DoWork::FindPiThreadResults(const FindPiThread::Result& m)
         _insoleApis.insert(key, insoleApi);
         QObject::connect(h, SIGNAL(ResponseOk(QUuid,QString,QByteArray)),
                              this, SLOT(ResponseOkAction(QUuid,QString,QByteArray)));
-        QObject::connect(h, SIGNAL(ResponseErr(QUuid,QString,QByteArray)),
-                             this, SLOT(ResponseNotOkAction(QUuid,QString,QByteArray)));
+        QObject::connect(h, SIGNAL(ResponseErr(QUuid,QString)),
+                             this, SLOT(ResponseNotOkAction(QUuid,QString)));
         // response err
         zInfo("trying: "+key);
         QUuid actionKey = h->GetAction("version");
@@ -119,7 +129,9 @@ DoWork::InsoleApi* DoWork::GetApi(const QString &key)
 //{
 //    return _httpHelper.GetAction(APIVER);
 //}
-void DoWork::ResponseNotOkAction(const QUuid& guid, const QString& action,  QByteArray s){
+void DoWork::ResponseNotOkAction(const QUuid& guid, const QString& action){
+    Q_UNUSED(action)
+
     if(_actions.contains(guid)){
         auto insoleApiKey = _actions[guid];
         auto& insoleApi = _insoleApis[insoleApiKey];
@@ -134,7 +146,7 @@ void DoWork::ResponseOkAction(const QUuid& guid, const QString& action,  QByteAr
     if(_actions.contains(guid)){
         auto insoleApiKey = _actions[guid];
         auto& insoleApi = _insoleApis[insoleApiKey];
-        insoleApi.checked=true;
+//        insoleApi.checked=true;
         insoleApi.isError=false;
         //auto responseString = QString(s);
         //zInfo("ResponseOkAction: "+a+": "+responseString);
@@ -173,6 +185,7 @@ void DoWork::ResponseOkAction(const QUuid& guid, const QString& action,  QByteAr
 
         else if(action=="get_data") //50;138;142;121;122;123;121;123;124;121;132;141;123;119;122;123
         {
+            insoleApi.checked=true;
             insoleApi.insoleData = Model::InsoleData::Parse(response, insoleApi.datalength);
 
             insoleApi.insoleType = GetInsoleType(insoleApi.insoleData.V);
@@ -186,7 +199,21 @@ void DoWork::ResponseOkAction(const QUuid& guid, const QString& action,  QByteAr
             if(ok)
             {
                 ResponseModel::FindPi r = CheckReady2();
+                r.status=ResponseModel::FindPi::Finished;
                 emit ResponseFindPi(r);
+                if(r.apiKey_L.count()==1)
+                {
+                    _apiKey_L=r.apiKey_L.first();
+                }
+                if(r.apiKey_R.count()==1)
+                {
+                    _apiKey_R=r.apiKey_R.first();
+                }
+                if(!(_apiKey_L.isEmpty() || _apiKey_R.isEmpty())){
+                    zInfo("start getdata");
+                    timer_L.start();
+                    timer_R.start();
+                }
             }
         }
     }
@@ -215,7 +242,7 @@ ResponseModel::FindPi DoWork::CheckReady2()
     {
         auto& api = _insoleApis[key];
         if(api.isError) continue;
-        QString msg = api.toString();
+        //QString msg = api.toString();
         if(api.insoleType!=nullptr)
         {
             auto d = api.insoleType->direction();
@@ -228,7 +255,33 @@ ResponseModel::FindPi DoWork::CheckReady2()
             r.apiKey_E.append(key);
         }
     }
+
     return r;
+}
+
+void DoWork::onTimeout_L()
+{
+    //InsoleApi* api = _insoleApis[_apiKey_L];
+    onTimeout(Model::PhysDirection::Directions::Left);
+}
+
+void DoWork::onTimeout_R()
+{
+    onTimeout(Model::PhysDirection::Directions::Right);
+}
+
+void DoWork::onTimeout(Model::PhysDirection::Directions d)
+{
+    ResponseModel::PiData r(_findPiPresenterGuid);
+    r.direction = d;
+    static int i_L,i_R;
+    if(d==Model::PhysDirection::Directions::Left){
+        r.message = QString::number(i_L++);
+    } else if(d==Model::PhysDirection::Directions::Right){
+        r.message = QString::number(i_R++);
+    }
+
+    emit ResponsePiData(r);
 }
 
 //void DoWork::GetApiverResponse(const QUuid& guid, QByteArray s){

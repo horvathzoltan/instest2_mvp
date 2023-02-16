@@ -3,6 +3,7 @@
 
 #include <QPixmap>
 #include <QString>
+#include "model.h"
 
 namespace ViewModel
 {    
@@ -10,6 +11,11 @@ namespace ViewModel
         QString message_L;
         QString message_R;
     };  
+
+    struct PiData{
+        QString message;
+        Model::PhysDirection::Directions direction;
+    };
 };
 
 #endif // VIEWMODEL_H

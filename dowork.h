@@ -2,6 +2,7 @@
 #define DOWORK_H
 
 #include <QCoreApplication>
+#include <QTimer>
 #include <models/responsemodel.h>
 #include <models/settings.h>
 #include <models/viewmodel.h>
@@ -22,6 +23,9 @@ private:
 public:
     explicit DoWork(QObject *parent = nullptr);   
 
+    QString _apiKey_L;
+    QString _apiKey_R;
+
     struct DoWorkInit{
         Settings settings;
     };
@@ -38,7 +42,7 @@ public:
 //        QStringList errors;
 //    };
 
-    ResponseModel::FindPi FindPi(const QSet<int>& ports, int timeout);
+    ResponseModel::FindPi FindPi(const QSet<int>& ports, int timeout, int steps);
   //  Model::ApiVer apiVer(){ return _data.apiVer; }
 
 
@@ -76,18 +80,26 @@ private:
 
     bool CheckReady();
     ResponseModel::FindPi CheckReady2();
+
+    QTimer timer_L;
+    QTimer timer_R;
+
+    void onTimeout_L();
+    void onTimeout_R();
+    void onTimeout(Model::PhysDirection::Directions d);
    // void GetApiverResponse(const QUuid& guid, QByteArray s);
 
 // (wiew)action -> (presenter)processAction -> [ (dowork)ResponseAction -> (presenter)onResponseAction -> ] (wiew)set_view
 //                                               ----------------------
 signals:
     void ResponseFindPi(ResponseModel::FindPi);
+    void ResponsePiData(ResponseModel::PiData);
     //2//apiver
     //void ResponseGetApiverAction(ResponseModel::GetApiVer);
 
 private slots:
     void ResponseOkAction(const QUuid& guid, const QString& action, QByteArray s);
-    void ResponseNotOkAction(const QUuid& guid, const QString& action, QByteArray s);
+    void ResponseNotOkAction(const QUuid& guid, const QString& action);
     void FindPiThreadResults(const FindPiThread::Result &s);
 
 public:

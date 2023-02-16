@@ -22,6 +22,7 @@ public:
 // ------------                                                                                             --------------
 
     void set_ApiverView(const ViewModel::FindPi& m);
+    void set_PiDataView(const ViewModel::PiData& m);
 
 signals:
     void GetApiverActionTriggered(IMainView *sender);

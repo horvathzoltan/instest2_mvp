@@ -1,6 +1,7 @@
 #include "ipscanner.h"
 #include <QNetworkInterface>
 #include <QTcpSocket>
+#include <QThread>
 #include <iostream>
 
 bool IpScanner::_verbose;
@@ -18,10 +19,11 @@ void IpScanner::log(const QString &msg)
     out.flush();
 }
 
-QMap<QString, QSet<int>> IpScanner::Scan(QHostAddress ip, int i1, int i2, QSet<int> ports, int timeout)
+QMap<QString, QSet<int>> IpScanner::Scan(QHostAddress ip, int i1, int i2, QSet<int> ports, int timeout, int steps)
 {
     if(i1<1||i1>255) return {};
     if(i2<1||i2>255) return {};
+    if(steps<1||steps>10) return {};
     if(i1>i2) return {};
     for(auto&port:ports) if(port<1||port>UINT16_MAX) return {};
 
@@ -31,30 +33,39 @@ QMap<QString, QSet<int>> IpScanner::Scan(QHostAddress ip, int i1, int i2, QSet<i
 
     qint32 i = ip.toIPv4Address();
     unsigned char* ip2 = reinterpret_cast<unsigned char*>(&i);//mutató az i LSB-re
-    static const QString w("|/-\\");
 
+    int timeout2 = timeout/2;
     for(unsigned char u=i1;u<i2;u++){
         *ip2=u;
         address.setAddress(i);
         for(auto&port:ports){
-            socket.connectToHost(address, port, QIODevice::ReadWrite);
-            bool ok = socket.waitForConnected(timeout);
-            if(ok)
-            {
-                socket.disconnectFromHost();
+            bool sok = false;
+            for(int i=0;i<steps;i++){
+                int t = timeout+(timeout2*i);
+                bool ok = TryConnect(socket, address, port, t);
+                if(ok){
+                    sok = true;
+                    log("steps: "+QString::number(i+1)+" timeout: "+QString::number(t));
+                    break;
+                }
+            }
+            if(sok){
                 auto a = address.toString();
                 ipList[a].insert(port);
-                if(_verbose)
-                    log("\r"+address.toString()+":"+QString::number(port)+"\n");
-            }
-            else{
-                if(_verbose)
-                    log(QStringLiteral("\rsearching ")+w[u%4]+'\r');
+                continue;
             }
         }
     }
     if(_verbose) log("\r");
     return ipList;
+}
+
+bool IpScanner::TryConnect(QTcpSocket& socket, const QHostAddress& address, int port, int timeout)
+{
+    socket.connectToHost(address, port, QIODevice::ReadWrite);
+    bool ok = socket.waitForConnected(timeout);
+    if(ok) socket.disconnectFromHost();
+    return ok;
 }
 
 QList<QHostAddress> IpScanner::GetLocalAddresses()

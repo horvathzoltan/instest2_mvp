@@ -34,6 +34,8 @@ auto MainPresenter::init(const MainPresenterInit& m) -> bool
     //2//apiver
     connect(&_dowork,SIGNAL(ResponseFindPi(ResponseModel::FindPi)),
             this,SLOT(onResponseFindPi(ResponseModel::FindPi)));
+    connect(&_dowork,SIGNAL(ResponsePiData(ResponseModel::PiData)),
+            this,SLOT(onResponsePiData(ResponseModel::PiData)));
     _isInited = true;
     return true;
 }
@@ -48,7 +50,7 @@ void MainPresenter::initView(IMainView *w) const {
 
 /*GetApiver*/
 void MainPresenter::processGetApiverAction(IMainView *sender){
-    ResponseModel::FindPi r = _dowork.FindPi({8080}, 30);
+    ResponseModel::FindPi r = _dowork.FindPi({8080}, 8, 4);
     _senders.insert(r.guid,sender);
     ViewModel::FindPi vm
     {
@@ -64,7 +66,7 @@ void MainPresenter::onResponseFindPi(ResponseModel::FindPi m)
     ViewModel::FindPi vm;
     for(auto&key:m.apiKey_L)
     {
-        if(vm.message_L.isEmpty()) vm.message_L+='\n';
+        if(!vm.message_L.isEmpty()) vm.message_L+='\n';
         auto api = _dowork.GetApi(key);
         if(api)
         {
@@ -73,7 +75,7 @@ void MainPresenter::onResponseFindPi(ResponseModel::FindPi m)
     }
     for(auto&key:m.apiKey_R)
     {
-        if(vm.message_R.isEmpty()) vm.message_R+='\n';
+        if(!vm.message_R.isEmpty()) vm.message_R+='\n';
         auto api = _dowork.GetApi(key);
         if(api)
         {
@@ -82,8 +84,18 @@ void MainPresenter::onResponseFindPi(ResponseModel::FindPi m)
     }
 
     _senders[m.guid]->set_ApiverView(vm);
-    // ha a request ready, azaz nem jön több művelet
-    //_senders.remove(m.guid); // első körben is ezt küldjük, nem törölhetjük ki csak a keresés folyamat végén, ha a státusz ok lesz
 }
 
+void MainPresenter::onResponsePiData(ResponseModel::PiData m)
+{
+    if(!_senders.contains(m.guid)) return;
+    ViewModel::PiData vm;
+
+    vm.direction = m.direction;
+    vm.message = m.message;
+
+    _senders[m.guid]->set_PiDataView(vm);
+    // ha a request ready, azaz nem jön több művelet
+    // ha van egy jobb és egy right, készen vagyunk, kezdődhet a kiolvasás
+}
 

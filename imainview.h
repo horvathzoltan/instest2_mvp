@@ -13,6 +13,7 @@ public:
     //2//apiver
     virtual void GetApiverActionTriggered(IMainView *sender) = 0;
     virtual void set_ApiverView(const ViewModel::FindPi& m) = 0;
+    virtual void set_PiDataView(const ViewModel::PiData& m) = 0;
 };
 
 #endif // IMAINVIEW_H

@@ -14,11 +14,12 @@ class FindPiThread : public QThread
 public:
     struct Model{
         Model();
-        Model(QHostAddress host, QSet<int> ports, int timeout);
+        Model(QHostAddress host, QSet<int> ports, int timeout, int steps);
 
         QHostAddress host;
         QSet<int> ports;
         int timeout;
+        int steps;
     };
 
     struct Result{
