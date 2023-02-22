@@ -50,7 +50,7 @@ void MainPresenter::initView(IMainView *w) const {
 
 /*GetApiver*/
 void MainPresenter::processGetApiverAction(IMainView *sender){
-    ResponseModel::FindPi r = _dowork.FindPi({8080}, 8, 4);
+    ResponseModel::FindPi r = _dowork.FindPi({8080}, 8, 4);//8, 4
     _senders.insert(r.guid,sender);
     ViewModel::FindPi vm
     {

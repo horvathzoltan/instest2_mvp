@@ -27,6 +27,7 @@ public:
 
     //QString url(){ return _url.host();}
     QString RequestToString(const QNetworkRequest &request);
+    void setVerbose(bool v);
 public slots:
     void onFinish(QNetworkReply *rep);
 signals:
@@ -35,6 +36,7 @@ signals:
 
 private:
     bool _inited = false;
+    bool _verbose = true;    
     QUrl _url;
     struct Action{
         QString action;

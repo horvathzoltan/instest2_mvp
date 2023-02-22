@@ -40,7 +40,7 @@ QUuid HttpHelper::GetAction(const QString& action)//, const QString& query)
     //_url.setQuery(query);
     QNetworkRequest request = CreateRequest(_url);
     QString msg = RequestToString(request);
-    zInfo("request: "+msg);
+    if(_verbose) zInfo("request: "+msg);
     mgr->get(request);
     return guid;
 }
@@ -191,7 +191,7 @@ void HttpHelper::onFinish(QNetworkReply *rep)
     } else {
         QByteArray location = rep->rawHeader(QString("Location").toLocal8Bit());
         if (location.size() > 0) {
-            zInfo("redirect: "+QString(location));
+            if(_verbose) zInfo("redirect: "+QString(location));
             Download("", location);
             return;
         } else {
@@ -222,7 +222,7 @@ void HttpHelper::onFinish(QNetworkReply *rep)
                         if(b.length()>20) msg+="...";
                         msg+=" url: " + url.toDisplayString();
 
-                        zInfo("reply: "+msg);
+                        if(_verbose) zInfo("reply: "+msg);
                         emit ResponseOk(guid, action.action, b);
                     }
                     if(action.mgr) action.mgr->deleteLater();
@@ -235,6 +235,11 @@ void HttpHelper::onFinish(QNetworkReply *rep)
         QString msg;
         msg+=" err: " + err;
         msg+=" url: " + url.toDisplayString();
-        zInfo(msg);
+        if(_verbose) zInfo(msg);
     }
+}
+
+void HttpHelper::setVerbose(bool v)
+{
+    _verbose = v;
 }

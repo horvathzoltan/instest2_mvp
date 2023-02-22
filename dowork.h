@@ -55,6 +55,10 @@ public:
 private:
     bool _isInited = false;
 
+    enum ApiStatus:int{
+        Waiting=0, Started
+    };
+
     struct InsoleApi{
         QString key;
         //QUuid presenterGuid;
@@ -69,7 +73,8 @@ private:
         Model::InsoleType* insoleType;
         //int insoletypeV
         //int[] prssures
-
+        Model::PhysDirection::Directions direction;
+        ApiStatus status = Waiting;
         QString toString();
     };
 
@@ -78,6 +83,7 @@ private:
     QMap<QUuid, QString> _actions;
     //Model::Data _data;
 
+    void startTimers();
     bool CheckReady();
     ResponseModel::FindPi CheckReady2();
 

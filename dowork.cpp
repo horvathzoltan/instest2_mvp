@@ -15,8 +15,8 @@ QList<Model::InsoleType> DoWork::_insoleTypes;
 
 DoWork::DoWork(QObject *parent) :QObject(parent)
 {
-    timer_L.setInterval(32);
-    timer_R.setInterval(32);
+    timer_L.setInterval(64);
+    timer_R.setInterval(64);
     connect(&timer_L, &QTimer::timeout, this, &DoWork::onTimeout_L);
     connect(&timer_R, &QTimer::timeout, this, &DoWork::onTimeout_R);
 }
@@ -185,35 +185,41 @@ void DoWork::ResponseOkAction(const QUuid& guid, const QString& action,  QByteAr
 
         else if(action=="get_data") //50;138;142;121;122;123;121;123;124;121;132;141;123;119;122;123
         {
-            insoleApi.checked=true;
             insoleApi.insoleData = Model::InsoleData::Parse(response, insoleApi.datalength);
+            if(insoleApi.status == Waiting){
+                insoleApi.checked=true;
+                insoleApi.insoleType = GetInsoleType(insoleApi.insoleData.V);
 
-            insoleApi.insoleType = GetInsoleType(insoleApi.insoleData.V);
+                QString msg = insoleApi.toString();
+                zInfo("insoleApi: "+msg);
 
-            QString msg = insoleApi.toString();
-            zInfo("insoleApi: "+msg);
-
-            // ha egy api válaszol, lecsekkoljuk, hogy van-e még aki nem
-            // ha mindegyik válaszolt, akkor ok, készen vagyunk
-            bool ok = CheckReady();
-            if(ok)
-            {
-                ResponseModel::FindPi r = CheckReady2();
-                r.status=ResponseModel::FindPi::Finished;
-                emit ResponseFindPi(r);
-                if(r.apiKey_L.count()==1)
+                // ha egy api válaszol, lecsekkoljuk, hogy van-e még aki nem
+                // ha mindegyik válaszolt, akkor ok, készen vagyunk
+                bool ok = CheckReady();
+                if(ok)
                 {
-                    _apiKey_L=r.apiKey_L.first();
+                    ResponseModel::FindPi r = CheckReady2();
+                    r.status=ResponseModel::FindPi::Finished;
+                    emit ResponseFindPi(r);
+                    if(r.apiKey_L.count()==1)
+                    {
+                        _apiKey_L=r.apiKey_L.first();
+                    }
+                    if(r.apiKey_R.count()==1)
+                    {
+                        _apiKey_R=r.apiKey_R.first();
+                    }
+                    if(!(_apiKey_L.isEmpty() || _apiKey_R.isEmpty())){
+                        zInfo("start getdata");
+                        startTimers();
+                    }
                 }
-                if(r.apiKey_R.count()==1)
-                {
-                    _apiKey_R=r.apiKey_R.first();
-                }
-                if(!(_apiKey_L.isEmpty() || _apiKey_R.isEmpty())){
-                    zInfo("start getdata");
-                    timer_L.start();
-                    timer_R.start();
-                }
+            }
+            else if(insoleApi.status == Started){
+                ResponseModel::PiData r(_findPiPresenterGuid);
+                r.direction = insoleApi.direction;
+                r.message = insoleApi.insoleData.toString();
+                emit ResponsePiData(r);
             }
         }
     }
@@ -270,19 +276,43 @@ void DoWork::onTimeout_R()
     onTimeout(Model::PhysDirection::Directions::Right);
 }
 
+void DoWork::startTimers(){
+    InsoleApi& api_L = _insoleApis[_apiKey_L];
+    api_L.direction = Model::PhysDirection::Directions::Left;
+    api_L.status = Started;
+    api_L.httpHelper->setVerbose(false);
+
+    InsoleApi& api_R = _insoleApis[_apiKey_R];
+    api_R.direction = Model::PhysDirection::Directions::Right;
+    api_R.status = Started;
+    api_R.httpHelper->setVerbose(false);
+
+    timer_L.start();
+    timer_R.start();
+}
 //https://stackoverflow.com/questions/15835267/qthread-and-qtimer
 void DoWork::onTimeout(Model::PhysDirection::Directions d)
 {
-    ResponseModel::PiData r(_findPiPresenterGuid);
-    r.direction = d;
-    static int i_L,i_R;
     if(d==Model::PhysDirection::Directions::Left){
-        r.message = QString::number(i_L++);
+        InsoleApi& api = _insoleApis[_apiKey_L];
+        QUuid actionKey = api.httpHelper->GetAction("get_data");
+        _actions.insert(actionKey, _apiKey_L);
     } else if(d==Model::PhysDirection::Directions::Right){
-        r.message = QString::number(i_R++);
+        InsoleApi& api = _insoleApis[_apiKey_R];
+        QUuid actionKey = api.httpHelper->GetAction("get_data");
+        _actions.insert(actionKey, _apiKey_R);
     }
 
-    emit ResponsePiData(r);
+//    ResponseModel::PiData r(_findPiPresenterGuid);
+//    r.direction = d;
+//    static int i_L,i_R;
+//    if(d==Model::PhysDirection::Directions::Left){
+//        r.message = QString::number(i_L++);
+//    } else if(d==Model::PhysDirection::Directions::Right){
+//        r.message = QString::number(i_R++);
+//    }
+
+//    emit ResponsePiData(r);
 }
 
 //void DoWork::GetApiverResponse(const QUuid& guid, QByteArray s){

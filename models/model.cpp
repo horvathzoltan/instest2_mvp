@@ -546,6 +546,16 @@ Model::InsoleData Model::InsoleData::Parse(const QByteArray& a, int dataLength)
     return d;
 }
 
+QString Model::InsoleData::toString()
+{
+    QString a;
+    for(int i=0;i<pressures.length();i++){
+        if(!a.isEmpty()) a+=',';
+        a+=QString::number(pressures[i]);
+    }
+    return QString::number(V)+':'+a;
+}
+
 Model::PhysDirection::Directions Model::PhysDirection::ToPhysDirection(int i)
 {
     auto d = static_cast<Directions>(i);

@@ -59,6 +59,7 @@ namespace Model
         QVarLengthArray<int> pressures;
 
         static InsoleData Parse(const QByteArray& str, int dataLength);
+        QString toString();
     };
 };
 
