@@ -15,11 +15,13 @@ private:
 public:
     DoubleMatrix();
     void init(int m, int n);
+    //void init(int m);
     void setData(int m, int n, double v);
-    double data(int m, int n);
+    double data(int m, int n) const;
     void clear();
+    int getLength(int i) const;
 private:
-    int index(int m, int n);
+    int index(int m, int n) const;
 };
 
 #endif // DOUBLEMATRIX_H
