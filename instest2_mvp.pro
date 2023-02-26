@@ -13,7 +13,9 @@ DEFINES += TARGI=$$TARGET
 
 SOURCES += \
     dowork.cpp \
+    helpers/bitmapgen.cpp \
     helpers/commandlineparserhelper.cpp \
+    helpers/doublematrix.cpp \
     helpers/filenamehelper.cpp \
     helpers/htmlhelper.cpp \
     helpers/httphelper.cpp \
@@ -32,7 +34,9 @@ SOURCES += \
 
 HEADERS += \
     dowork.h \
+    helpers/bitmapgen.h \
     helpers/commandlineparserhelper.h \
+    helpers/doublematrix.h \
     helpers/filenamehelper.h \
     helpers/htmlhelper.h \
     helpers/httphelper.h \
