@@ -190,51 +190,53 @@ QImage BitMapGen::getColoredBitmap(const DoubleMatrix& m2, double limit, bool is
     if (MW == 0) return {};
     if (MH == 0) return {};
 
-    const BitmapPixelFormat PIXFM = BitmapPixelFormat.Rgba8;
+//    const BitmapPixelFormat PIXFM = BitmapPixelFormat.Rgba8;
 
-    SoftwareBitmap newBitmap = new SoftwareBitmap(PIXFM, MW, MH, BitmapAlphaMode.Premultiplied);
+    //SoftwareBitmap newBitmap = new SoftwareBitmap(PIXFM, MW, MH, BitmapAlphaMode.Premultiplied);
+    QImage b(MW, MH, QImage::Format_RGBA8888_Premultiplied);
+    //using (BitmapBuffer bm1Data = newBitmap.LockBuffer(BitmapBufferAccessMode.Write))
+    //{
+    //    using (IMemoryBufferReference reference = bm1Data.CreateReference())
+    //    {
+       //     ((IMemoryBufferByteAccess)reference).GetBuffer(out byte* dataInBytes, out _);
 
-    using (BitmapBuffer bm1Data = newBitmap.LockBuffer(BitmapBufferAccessMode.Write))
-    {
-        using (IMemoryBufferReference reference = bm1Data.CreateReference())
-        {
-            ((IMemoryBufferByteAccess)reference).GetBuffer(out byte* dataInBytes, out _);
+       //     BitmapPlaneDescription bufferLayout = bm1Data.GetPlaneDescription(0);
 
-            BitmapPlaneDescription bufferLayout = bm1Data.GetPlaneDescription(0);
-
-            Parallel.For(0, bufferLayout.Height, (i, state) =>
+          //  Parallel.For(0, bufferLayout.Height, (i, state) =>
+            for(int i=0;i<MH; i++)
             {
-                int actialStride = bufferLayout.StartIndex + (bufferLayout.Stride * i);
-                int rowIx;
-                Color c;
+                auto u = b.scanLine(i);
+                //int actialStride = bufferLayout.StartIndex + (bufferLayout.Stride * i);
+                //int rowIx;
+                QColor c;
                 double v;
-                int s = actialStride;
-                for (int j = 0; j < bufferLayout.Width; j++)
+                int s = 0;//actialStride;
+                for (int j = 0; j < MW; j++)
                 {
-                    rowIx = bufferLayout.Height - 1 - i;
-                    v = m2[j, rowIx];
+                    //rowIx = bufferLayout.Height - 1 - i;
+                    v = m2.data(j, i);
                     if (v < 0)
                     {
-                        dataInBytes[s++] = _backgroundColor.R;
-                        dataInBytes[s++] = _backgroundColor.G;
-                        dataInBytes[s++] = _backgroundColor.B;
-                        dataInBytes[s++] = isTransparent ? (byte)0 : (byte)255;
+                        u[s++] = _backgroundColor.red();
+                        u[s++] = _backgroundColor.green();
+                        u[s++] = _backgroundColor.blue();
+                        u[s++] = isTransparent ? 0 : 255;
                     }
                     else
                     {
                         c = isColored ? GetColorByLevel(v, limit) : GrayLevel(v);
 
-                        dataInBytes[s++] = c.R;
-                        dataInBytes[s++] = c.G;
-                        dataInBytes[s++] = c.B;
-                        dataInBytes[s++] = (byte)255;
+                        u[s++] = c.red();
+                        u[s++] = c.green();
+                        u[s++] = c.blue();
+                        u[s++] = 255;
                     }
                 }
-            });
-        }
-    }
+            }//);
+   //     }
+  //  }
 
-    return newBitmap;
+    return b;
 }
 
 //igény van arra, hogy a mátrix cellája négyzetes legyen, ezért megadjuk, hogy vízszintesen n darab van, majd kiszámoljuk, hogy föggőlegesen mennyinek kell lennie
@@ -439,124 +441,124 @@ void BitMapGen::setFilter(DoubleMatrix* matrix, const QStringList& pts)
         }
     }
 
-    ScanlineFill(&matrix, &EdgeTable, &ActiveEdgeTuple);
+    ScanlineFill(matrix, EdgeTable, &ActiveEdgeTuple);
 }
 
-        private void ScanlineFill(ref double[,] matrix, ref EdgeTableTuple[] EdgeTable, ref EdgeTableTuple ActiveEdgeTuple)
+void BitMapGen::ScanlineFill(DoubleMatrix* matrix, EdgeTableTuple* EdgeTable, EdgeTableTuple* ActiveEdgeTuple)
+{
+    int i, j, x1, ymax1, x2, ymax2, coordCount;
+    bool FillFlag;// = false;
+
+    // we will start from scanline 0;
+    // Repeat until last scanline:
+    for (i = 0; i < M; i++)//4. Increment y by 1 (next scan line)
+    {
+
+        // 1. Move from ET bucket y to the
+        // AET those edges whose ymin = y (entering edges)
+        for (j = 0; j < EdgeTable[i].countEdgeBucket; j++)
         {
-            int i, j, x1, ymax1, x2, ymax2, coordCount;
-            bool FillFlag;// = false;
+            storeEdgeInTuple(ActiveEdgeTuple, EdgeTable[i].buckets[j].
+                     ymax, (int)EdgeTable[i].buckets[j].xOfMin,
+                    EdgeTable[i].buckets[j].slopeInverse);
+        }
 
-            // we will start from scanline 0;
-            // Repeat until last scanline:
-            for (i = 0; i < M; i++)//4. Increment y by 1 (next scan line)
+        // 2. Remove from AET those edges for
+        // which y=ymax (not involved in next scan line)
+        removeEdgeByYmax(ActiveEdgeTuple, i);
+
+        //sort AET (remember: ET is presorted)
+        insertionSort(ActiveEdgeTuple);
+
+        //3. Fill lines on scan line y by using pairs of x-coords from AET
+        j = 0;
+        //FillFlag = false;
+        coordCount = 0;
+        x1 = 0;
+        x2 = 0;
+        ymax1 = 0;
+        ymax2 = 0;
+        while (j < ActiveEdgeTuple->countEdgeBucket)
+        {
+            if (coordCount % 2 == 0)
             {
-
-                // 1. Move from ET bucket y to the
-                // AET those edges whose ymin = y (entering edges)
-                for (j = 0; j < EdgeTable[i].countEdgeBucket; j++)
+                x1 = (int)(ActiveEdgeTuple->buckets[j].xOfMin);
+                ymax1 = ActiveEdgeTuple->buckets[j].ymax;
+                if (x1 == x2)
                 {
-                    storeEdgeInTuple(ref ActiveEdgeTuple, EdgeTable[i].buckets[j].
-                             ymax, (int)EdgeTable[i].buckets[j].xOfMin,
-                            EdgeTable[i].buckets[j].slopeInverse);
+                    // three cases can arrive-
+                    //  1. lines are towards top of the intersection
+                    //  2. lines are towards bottom
+                    //  3. one line is towards top and other is towards bottom
+                    if (((x1 == ymax1) && (x2 != ymax2)) || ((x1 != ymax1) && (x2 == ymax2)))
+                    {
+                        x2 = x1;
+                        ymax2 = ymax1;
+                    }
+
+                    else
+                    {
+                        coordCount++;
+                    }
                 }
 
-                // 2. Remove from AET those edges for
-                // which y=ymax (not involved in next scan line)
-                removeEdgeByYmax(ref ActiveEdgeTuple, i);
-
-                //sort AET (remember: ET is presorted)
-                insertionSort(ref ActiveEdgeTuple);
-
-                //3. Fill lines on scan line y by using pairs of x-coords from AET
-                j = 0;
-                //FillFlag = false;
-                coordCount = 0;
-                x1 = 0;
-                x2 = 0;
-                ymax1 = 0;
-                ymax2 = 0;
-                while (j < ActiveEdgeTuple.countEdgeBucket)
+                else
                 {
-                    if (coordCount % 2 == 0)
+                    coordCount++;
+                }
+            }
+            else
+            {
+                x2 = (int)ActiveEdgeTuple->buckets[j].xOfMin;
+                ymax2 = ActiveEdgeTuple->buckets[j].ymax;
+
+                FillFlag = false;
+
+                // checking for intersection...
+                if (x1 == x2)
+                {
+                    //  three cases can arive-
+                    //  1. lines are towards top of the intersection
+                    //  2. lines are towards bottom
+                    //  3. one line is towards top and other is towards bottom
+                    if (((x1 == ymax1) && (x2 != ymax2)) || ((x1 != ymax1) && (x2 == ymax2)))
                     {
-                        x1 = (int)(ActiveEdgeTuple.buckets[j].xOfMin);
-                        ymax1 = ActiveEdgeTuple.buckets[j].ymax;
-                        if (x1 == x2)
-                        {
-                            // three cases can arrive-
-                            //  1. lines are towards top of the intersection
-                            //  2. lines are towards bottom
-                            //  3. one line is towards top and other is towards bottom
-                            if (((x1 == ymax1) && (x2 != ymax2)) || ((x1 != ymax1) && (x2 == ymax2)))
-                            {
-                                x2 = x1;
-                                ymax2 = ymax1;
-                            }
-
-                            else
-                            {
-                                coordCount++;
-                            }
-                        }
-
-                        else
-                        {
-                            coordCount++;
-                        }
+                        x1 = x2;
+                        ymax1 = ymax2;
                     }
                     else
                     {
-                        x2 = (int)ActiveEdgeTuple.buckets[j].xOfMin;
-                        ymax2 = ActiveEdgeTuple.buckets[j].ymax;
-
-                        FillFlag = false;
-
-                        // checking for intersection...
-                        if (x1 == x2)
-                        {
-                            //  three cases can arive-
-                            //  1. lines are towards top of the intersection
-                            //  2. lines are towards bottom
-                            //  3. one line is towards top and other is towards bottom
-                            if (((x1 == ymax1) && (x2 != ymax2)) || ((x1 != ymax1) && (x2 == ymax2)))
-                            {
-                                x1 = x2;
-                                ymax1 = ymax2;
-                            }
-                            else
-                            {
-                                coordCount++;
-                                FillFlag = true;
-                            }
-                        }
-                        else
-                        {
-                            coordCount++;
-                            FillFlag = true;
-                        }
-
-
-                        if (FillFlag)
-                        {
-                            //drawing actual lines...
-                            for (int k = x1; k < x2; k++)
-                            {
-                                matrix[i, k] = 0;
-                            }
-                            //printf("\nLine drawn from %d,%d to %d,%d",x1,i,x2,i);
-                        }
-
+                        coordCount++;
+                        FillFlag = true;
                     }
-
-                    j++;
+                }
+                else
+                {
+                    coordCount++;
+                    FillFlag = true;
                 }
 
 
-                // 5. For each nonvertical edge remaining in AET, update x for new y
-                updatexbyslopeinv(ref ActiveEdgeTuple);
+                if (FillFlag)
+                {
+                    //drawing actual lines...
+                    for (int k = x1; k < x2; k++)
+                    {
+                        matrix->setData(i, k, 0);
+                    }
+                    //printf("\nLine drawn from %d,%d to %d,%d",x1,i,x2,i);
+                }
+
             }
+
+            j++;
         }
+
+
+        // 5. For each nonvertical edge remaining in AET, update x for new y
+        updatexbyslopeinv(ActiveEdgeTuple);
+    }
+}
 
 void BitMapGen::updatexbyslopeinv(EdgeTableTuple* Tup)
 {

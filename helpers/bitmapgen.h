@@ -131,6 +131,7 @@ public:
     QColor GetColorByLevel(double v, double limit = -1);
     static DoubleMatrix ScaleMatrix(const DoubleMatrix &pressuremap, int n);
     QImage getColoredBitmap(const DoubleMatrix &m2, double limit, bool isColored, bool isTransparent);
+    void ScanlineFill(DoubleMatrix *matrix, EdgeTableTuple *EdgeTable, EdgeTableTuple *ActiveEdgeTuple);
 };
 
 #endif // BITMAPGEN_H
