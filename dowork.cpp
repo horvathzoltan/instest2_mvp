@@ -1,5 +1,6 @@
 #include <QCommandLineParser>
 #include <QFileInfo>
+#include <QImageWriter>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -33,8 +34,31 @@ auto DoWork::init(const DoWorkInit& m) -> bool
     //                 this, SLOT(ResponseOkAction(QUuid,QString,QByteArray)));
 
     _insoleTypes = Model::InsoleType::ParseList(Model::InsoleType::CSV);
-    _isInited = true;
+    QVarLengthArray<int> pL, pR;
+    for(int i=0;i<15;i++){
+        pL.append(700);
+        pR.append(700);
+    }
 
+    auto tr = _insoleTypes[0];
+    _bitmapGen_R.Init(tr.GeometryCSV, 4,0.65);
+    _bitmapGen_R.setPreview(false);
+    auto pmR = _bitmapGen_R.getPressureMap2(pR);
+    auto bR = BitMapGen::getColoredBitmap(pmR, 16, true, true, Qt::darkGreen);
+    QImageWriter writerR("image_R.png","PNG");
+    bR.mirror(0,1);
+    writerR.write(bR);
+
+    auto tl = _insoleTypes[1];
+    _bitmapGen_L.Init(tl.GeometryCSV, 4,0.65);
+    _bitmapGen_R.setPreview(false);
+    auto pmL = _bitmapGen_L.getPressureMap2(pL);
+    auto bL = BitMapGen::getColoredBitmap(pmL, 16, true, true, Qt::darkBlue);
+    QImageWriter writerL("image_L.png","PNG");
+    bL.mirror(0,1);
+    writerL.write(bL);
+
+    _isInited = true;
     return true;
 }
 

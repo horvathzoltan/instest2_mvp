@@ -7,11 +7,15 @@
 #include <QImage>
 #include <QMap>
 #include <QSize>
+#include <QString>
 
 
 class BitMapGen
 {
-private:
+public:
+    BitMapGen();
+    void setPreview(bool v);
+private:    
     int xMax, yMax, xMin, yMin;
     DoubleMatrix matrix;// matrix[][];
     DoubleMatrix matrixp;//double matrixp[][];
@@ -21,22 +25,26 @@ private:
     double rMult = 6;
     double szoras = 3;
     double R_preview = 2;
-    bool preview;
+    bool _preview;
     bool isShowSensor;
+    QString _lasterr;
 
     QMap<int, double> mul;
-    QList<QColor> rgb;
+
+    static QStringList _rgbTxt;
+    static void initRgb();
+    static QList<QColor> _rgb;
 
     bool isInited;
     bool _isInitializing=false;
 
     struct pt
     {
-        int x;
-        int y;
-        double r;
-        int ch;
-        double ratio;
+        int x=0;
+        int y=0;
+        double r=0;
+        int ch=0;
+        double ratio=0;
     };
 
     class pt2
@@ -44,8 +52,8 @@ private:
     public:
         pt p;
         QList<DoubleMatrix> lut;
-        int n, m;
-        QString name;
+        int n=0, m=0;
+        QString name="";
 
         pt2(){};
 
@@ -79,31 +87,15 @@ private:
     {
         int countEdgeBucket;
         QVarLengthArray<EdgeBucket> buckets;
-    };
-
-    QStringList c{
-        "#3c3c3c",
-        "#032787",
-        "#012d95",
-        "#0165ac",
-        "#057ba4",
-        "#0a91a1",
-        "#119585",
-        "#198908",
-        "#819c0f",
-        "#cda41f",
-        "#c98626",
-        "#c56623",
-        "#bf2c20"
-    };
+    };    
 
     QString filename;
 
     QColor _backgroundColor = QColorConstants::Black;
 public:
     void Dispose();
-    void Init(QString insoleMetaContent, int _prevRes, double csvMultiplier, QColor backgroundColor);
-    void Init2(QString insoleMetaContent, int _prevRes, double csvMultiplier, QColor bkcolor);
+    void Init(QString insoleMetaContent, int _prevRes, double csvMultiplier);
+    void Init2(QString insoleMetaContent, int _prevRes, double csvMultiplier);
     void setMaxMin(const QStringList &s);
     void fromCSV(const QStringList &s);
     void setMul(const QStringList &s, double csvMultiplier);
@@ -126,11 +118,11 @@ public:
     DoubleMatrix getPressureMap2(const QVarLengthArray<int>& values2);
     DoubleMatrix getPressureMap3_preview(const QVarLengthArray<int>& values2);
     DoubleMatrix getPressureMap3(const QVarLengthArray<int> &values2);
-    void ipolMat_preview(DoubleMatrix *matrix, QMap<int, pt2> sensors, int pressureV, int ch);
-    void ipolMat(DoubleMatrix *matrix, QMap<int, pt2> sensors, int pressureV, int ch);
-    QColor GetColorByLevel(double v, double limit = -1);
+    void ipolMat_preview(DoubleMatrix *matrix, int pressureV, int ch);
+    void ipolMat(DoubleMatrix *matrix, int pressureV, int ch);
+    static QColor GetColorByLevel(double v, double limit, QColor backgroundColor);
     static DoubleMatrix ScaleMatrix(const DoubleMatrix &pressuremap, int n);
-    QImage getColoredBitmap(const DoubleMatrix &m2, double limit, bool isColored, bool isTransparent);
+    static QImage getColoredBitmap(const DoubleMatrix &m2, double limit, bool isColored, bool isTransparent, QColor backgroundColor);
     void ScanlineFill(DoubleMatrix *matrix, EdgeTableTuple *EdgeTable, EdgeTableTuple *ActiveEdgeTuple);
 };
 

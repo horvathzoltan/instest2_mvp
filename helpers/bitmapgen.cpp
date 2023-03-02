@@ -4,6 +4,23 @@
 #include <QtMath>
 #include <QImage>
 
+QList<QColor> BitMapGen::_rgb;
+
+QStringList BitMapGen::_rgbTxt{
+        "#3c3c3c",
+        "#032787",
+        "#012d95",
+        "#0165ac",
+        "#057ba4",
+        "#0a91a1",
+        "#119585",
+        "#198908",
+        "#819c0f",
+        "#cda41f",
+        "#c98626",
+        "#c56623",
+        "#bf2c20"
+    };
 
 void BitMapGen::Dispose()
 {
@@ -19,34 +36,52 @@ void BitMapGen::Dispose()
     matrixp.clear();
 }
 
+BitMapGen::BitMapGen()
+{
+    if(_rgb.empty()){
+        BitMapGen::initRgb();
+    }
+}
+
+void BitMapGen::setPreview(bool v)
+{
+    _preview=v;
+}
+
+void BitMapGen::initRgb(){
+    if(_rgbTxt.isEmpty()){
+        zInfo("cannot initRgb: _rgbTxt is empty");
+        return;
+    }
+    //QList<QColor> rgb;
+    for(auto& item:_rgbTxt)
+    {
+        QColor x(item);
+        _rgb.append(x);
+    }
+    //return rgb;
+}
 
 void BitMapGen::Init(QString insoleMetaContent, int _prevRes,
-          double csvMultiplier, QColor backgroundColor)
+          double csvMultiplier)
 {
     if (_isInitializing) return;
     _isInitializing = true;
 
-    Init2(insoleMetaContent, _prevRes, csvMultiplier, backgroundColor);
+    Init2(insoleMetaContent, _prevRes, csvMultiplier);
     _isInitializing = false;
 }
 
 void BitMapGen::Init2(QString insoleMetaContent,
-                      int _prevRes, double csvMultiplier,
-                      QColor bkcolor)
+                      int _prevRes, double csvMultiplier)
 {
     isInited = false;
     if (insoleMetaContent.isEmpty()) return;
     R_preview = _prevRes;
     //insolename = insolename.zNormalize();
-    _backgroundColor = bkcolor;
+    //_backgroundColor = bkcolor;
 
-    auto lines = insoleMetaContent.split('\n');
-
-    for(auto& item:c)
-    {
-        QColor x(item);
-        rgb.append(x);
-    }
+    auto lines = insoleMetaContent.split('\n');   
 
     xMax = yMax = std::numeric_limits<int>::min();
     xMin = yMin = std::numeric_limits<int>::max();
@@ -54,12 +89,12 @@ void BitMapGen::Init2(QString insoleMetaContent,
     setMaxMin(lines);
     //FootprintSideEnum.Left
 
-    /////
+    ///// fill sensors
     sensors = QMap<int, pt2>();
     fromCSV(lines);
     if (sensors.count() == 0)
     {
-        //throw new Exception(TranslationService.Translate(TranslateEnum.NOINSOLEDATAINFILE, filename));
+        _lasterr = QStringLiteral("NOINSOLEDATAINFILE");
         return;
     }
     /// ha itt jön egy dispose
@@ -73,6 +108,9 @@ void BitMapGen::Init2(QString insoleMetaContent,
     matrix.init(N, M);
     matrixp.init(N_preview, M_preview);
 
+    //int MW = matrix.getLength(0);// a kiinduló, nagy mátrix adatai
+    //int MH = matrix.getLength(1);
+
     for (int i = 0; i < N; i++)
     {
         for (int j = 0; j < M; j++)
@@ -85,7 +123,10 @@ void BitMapGen::Init2(QString insoleMetaContent,
     {
         for (int j = 0; j < M_preview; j++)
         {
-            auto aa = matrix.data((int)(i * R_preview), (int)(j * R_preview));
+            double aa;
+            bool okaa = matrix.data((int)(i * R_preview),
+                                  (int)(j * R_preview), &aa);
+            if(!okaa) continue;
             matrixp.setData(i, j, aa);
         }
     }
@@ -148,8 +189,10 @@ QColor BitMapGen::GrayLevel(double v)
 
 DoubleMatrix BitMapGen::getPressureMap2(const QVarLengthArray<int>& values2)
 {
-    if (preview) return getPressureMap3_preview(values2);
-    auto a = getPressureMap3(values2);
+    DoubleMatrix a = _preview
+            ?getPressureMap3_preview(values2)
+           :getPressureMap3(values2);
+    //a.mirror();
     return a;
 }
 
@@ -158,32 +201,34 @@ DoubleMatrix BitMapGen::getPressureMap3_preview(const QVarLengthArray<int>& valu
     if (!isInited) return {};
     if (values2.length()==0) return {};
 
-    DoubleMatrix m2;// = matrixp.Clone() as double[,];
-    m2.init(M_preview, N_preview);
-    for(int i=0;i<values2.length();i++){
-        ipolMat_preview(&m2, sensors, values2[i] / 64, i + 1);
+    DoubleMatrix m2(matrixp);
+    m2.init(N_preview, M_preview);
+    for(int i=0,L=values2.length();i<L;i++){
+        auto v = values2[i] / 64;
+        int ch = i + 1;
+        ipolMat_preview(&m2, v, ch);
     }
-//    Parallel.For(0, values2.Length, (i) => ipolMat_preview(&m2, sensors, values2[i] / 64, i + 1));
     return m2;
 }
 
-DoubleMatrix BitMapGen::getPressureMap3(const QVarLengthArray<int>& values2)
+DoubleMatrix BitMapGen::getPressureMap3(const QVarLengthArray<int>& pressures)
 {
     if (!isInited) return {};
-    if (values2.length() == 0) return {};
+    if (pressures.length() == 0) return {};
 
-    DoubleMatrix m2;
-    m2.init(M, N);
-    for(int i=0;i<values2.length();i++){
-        ipolMat(&m2, sensors, values2[i] / 64, i + 1);
+    DoubleMatrix m2(matrix);
+
+    for(int i=0,L=pressures.length();i<L;i++){
+        auto v = pressures[i] / 64;
+        int ch = i + 1;
+        ipolMat(&m2, v, ch);
     }
-    //Parallel.For(0, values2.Length, (i) => ipolMat(ref m2, sensors, values2[i] / 64, i + 1));
     return m2;
 }
 
-QImage BitMapGen::getColoredBitmap(const DoubleMatrix& m2, double limit, bool isColored, bool isTransparent)
+QImage BitMapGen::getColoredBitmap(const DoubleMatrix& m2, double limit, bool isColored, bool isTransparent, QColor backgroundColor)
 {
-    if (!isInited) return {};
+    //if (!isInited) return {};
     //if (m2 == null) return null;
     int MW = m2.getLength(0);// a kiinduló, nagy mátrix adatai
     int MH = m2.getLength(1);
@@ -205,26 +250,29 @@ QImage BitMapGen::getColoredBitmap(const DoubleMatrix& m2, double limit, bool is
           //  Parallel.For(0, bufferLayout.Height, (i, state) =>
             for(int i=0;i<MH; i++)
             {
-                auto u = b.scanLine(i);
+                uchar* u = b.scanLine(i);
                 //int actialStride = bufferLayout.StartIndex + (bufferLayout.Stride * i);
                 //int rowIx;
                 QColor c;
-                double v;
-                int s = 0;//actialStride;
+
+                uint s = 0;//actialStride;
                 for (int j = 0; j < MW; j++)
                 {
                     //rowIx = bufferLayout.Height - 1 - i;
-                    v = m2.data(j, i);
-                    if (v < 0)
+                    double v=0;
+                    bool okv = m2.data(j, i, &v);
+                    if (!okv || v < 0)
                     {
-                        u[s++] = _backgroundColor.red();
-                        u[s++] = _backgroundColor.green();
-                        u[s++] = _backgroundColor.blue();
+                        u[s++] = backgroundColor.red();
+                        u[s++] = backgroundColor.green();
+                        u[s++] = backgroundColor.blue();
                         u[s++] = isTransparent ? 0 : 255;
                     }
                     else
                     {
-                        c = isColored ? GetColorByLevel(v, limit) : GrayLevel(v);
+                        c = isColored
+                                ? GetColorByLevel(v, limit, backgroundColor)
+                               : GrayLevel(v);
 
                         u[s++] = c.red();
                         u[s++] = c.green();
@@ -283,8 +331,9 @@ DoubleMatrix BitMapGen::ScaleMatrix(const DoubleMatrix& pressuremap, int n)
                     int xb = x0 + (int)(b * ww);
                     if (xb < 0) continue;
 
-                    double v1 = pressuremap.data(xb, ya);
-                    if (v1 >= 0) // a szélét és a keretet nem adjuk hozzá
+                    double v1;
+                    bool okv1  = pressuremap.data(xb, ya, &v1);
+                    if (okv1 && v1 >= 0) // a szélét és a keretet nem adjuk hozzá
                     {
                         vv += v1;
                         vn++;
@@ -300,50 +349,34 @@ DoubleMatrix BitMapGen::ScaleMatrix(const DoubleMatrix& pressuremap, int n)
     return e;
 }
 
-/*
- if (v > 16) return rgb[12];
-    if (v > 14.6) return rgb[11];
-    if (v > 14.1) return rgb[10];
-    if (v > 13.4) return rgb[9];
-    if (v > 12.5) return rgb[8];
-    if (v > 11.4) return rgb[7];
-    if (v > 10.1) return rgb[6];
-    if (v > 8.6) return rgb[5];
-    if (v > 6.9) return rgb[4];
-    if (v > 5) return rgb[3];
-    if (v > 4) return rgb[2];
-    if (v > .6) return rgb[1];
-    //if (v < 0) return Color.FromArgb(0, 0, 0, 0);
-    else return rgb[0];
-    //return rgb[GetLevelIx(v)];
-    //return RGBHelper.Colors[GetLevelIx(v)];*/
-
-
-
 // 16->100%
-QColor BitMapGen::GetColorByLevel(double v, double limit)
+QColor BitMapGen::GetColorByLevel(double v, double limit, QColor backgroundColor)
 {
-    if (v < 0) return _backgroundColor;
-    if (limit > 0 && v < limit) return rgb[0];
+    if(_rgb.empty())
+        return Qt::red;
+    if (v < 0) return backgroundColor;
+    //if (limit > 0 && v < limit) return _rgb[0];
     if (v > 15.75)
-        return rgb[12];
-    if (v > 15) return rgb[11];
-    if (v > 14.25) return rgb[10];
-    if (v > 13.5) return rgb[9];
-    if (v > 11) return rgb[8];
-    if (v > 8.5) return rgb[7];//zöld
-    if (v > 5.5) return rgb[6];
-    if (v > 5) return rgb[5];
-    if (v > 4.5) return rgb[4];
-    if (v > 4) return rgb[3];
-    if (v > 3) return rgb[2];
+        return _rgb[12];
+    if (v > 15) return _rgb[11];
+    if (v > 14.25) return _rgb[10];
+    if (v > 13.5) return _rgb[9];
+    if (v > 11) return _rgb[8];
+    if (v > 8.5) return _rgb[7];//zöld
+    if (v > 5.5) return _rgb[6];
+    if (v > 5) return _rgb[5];
+    if (v > 4.5) return _rgb[4];
+    if (v > 4) return _rgb[3];
+    if (v > 3) return _rgb[2];
     if (v > 2)
-        return rgb[1];
+        return _rgb[1];
 
-    return rgb[0];
+    return _rgb[0];
 }
 
-void BitMapGen::ipolMat_preview(DoubleMatrix* matrix, QMap<int, pt2> sensors, int pressureV, int ch)
+void BitMapGen::ipolMat_preview(DoubleMatrix* matrix,
+                                int pressureV,
+                                int ch)
 {
     int n = sensors[ch].n;
     int m = sensors[ch].m;
@@ -355,39 +388,47 @@ void BitMapGen::ipolMat_preview(DoubleMatrix* matrix, QMap<int, pt2> sensors, in
         for (int j = 0; j < m; j += (int)R_preview)
         {
             int y2 = (int)((sensors[ch].p.y - (m / 2) + j) / R_preview);
-            double v1 = matrix->data(x2, y2);
+            double v1;
+            bool okv1 = matrix->data(x2, y2, &v1);
+            if(!okv1) continue;
             bool ok = (x2 >= 0)
             && (x2 < N_preview)
             && (y2 >= 0)
             && (y2 < M_preview)
             && (v1 >= 0);
             if (!ok) continue;
-            double v3 = v2.data(i, j) * mul[ch];
+            double v3;
+            bool okv3 = v2.data(i, j, &v3) * mul[ch];
+            if(!okv3) continue;
             matrix->setData(x2, y2, v1 + v3);
         }
     }
 }
 
-void BitMapGen::ipolMat(DoubleMatrix* matrix, QMap<int, pt2> sensors, int pressureV, int ch)
+void BitMapGen::ipolMat(DoubleMatrix* matrix, int pressureV, int ch)
 {
     int n = sensors[ch].n;
     int m = sensors[ch].m;
-    auto v2 = sensors[ch].lut[pressureV];
+    DoubleMatrix v2 = sensors[ch].lut[pressureV];
 
     for (int i = 0; i < n; i++)
     {
         int x2 = (int)(sensors[ch].p.x - (n / 2) + i);
         for (int j = 0; j < m; j++)
         {
+            double v1=0;
             int y2 = (int)(sensors[ch].p.y - (m / 2) + j);
-            double v1 = matrix->data(x2, y2);
+            bool okv1 = matrix->data(x2, y2, &v1);
+            //if(!okv1) continue;
             bool ok = (x2 >= 0)
             && (x2 < N)
             && (y2 >= 0)
             && (y2 < M)
             && (v1 >= 0);
             if (!ok) continue;
-            double v3 = v2.data(i, j)* mul[ch];
+            double v3=0;
+            bool okv3 = v2.data(i, j, &v3)* mul[ch];
+            if(!okv3) continue;
             matrix->setData(x2, y2, v1 + v3);
         }
     }
@@ -714,7 +755,9 @@ void BitMapGen::generatePt2(int key)
             {
                 for (int j = 0; j < sensors[key].m; j++)
                 {
-                    auto aa = a.data((int)(i * b), j);
+                    double aa;
+                    bool okaa = a.data((int)(i * b), j, &aa);
+                    if(!okaa) continue;
                     mat.setData(i, j, aa);
                 }
             }
@@ -733,7 +776,11 @@ void BitMapGen::generatePt2(int key)
             {
                 for (int j = 0; j < sensors[key].m; j++)
                 {
-                    auto aa = a.data((int)(i), (int)(j * sensors[key].p.ratio));
+                    double aa;
+                    bool okaa = a.data((int)(i)
+                                       ,(int)(j * sensors[key].p.ratio)
+                                       , &aa);
+                    if(!okaa) continue;
                     mat.setData(i, j, aa);
                 }
             }
@@ -800,16 +847,21 @@ void BitMapGen::BivariateNormalPdf(DoubleMatrix* matrix, int height, int n)
             double pm[2];
             pm[0] = p[0] - mu[0];
             pm[1] = p[1] - mu[1];
-            double a = (pm[0] * isigma.data(0, 0)) +
-                    (pm[1] * isigma.data(0, 1));
-            double b = (pm[0] * isigma.data(1, 0)) +
-                    (pm[1] * isigma.data(1, 1));
+            double s00, s01, s10, s11;
+            isigma.data(0, 0, &s00);
+            isigma.data(0, 1, &s01);
+            isigma.data(1, 0, &s10);
+            isigma.data(1, 1, &s11);
+            double a = (pm[0] * s00) + (pm[1] * s01);
+            double b = (pm[0] * s10) + (pm[1] * s11);
             double c = p[0] * a;
             double d = p[1] * b;
             double v = coeff * qExp(-0.5 * (c + d));
-            matrix->setData(i, j,v);
-            if (matrix->data(i, j) > max)
-                max = matrix->data(i, j);
+            matrix->setData(i, j, v);
+
+            //matrix->data(i, j)
+            if (v > max)
+                max = v;//matrix->data(i, j);
         }
     }
 
@@ -817,7 +869,8 @@ void BitMapGen::BivariateNormalPdf(DoubleMatrix* matrix, int height, int n)
     {
         for (int j = 0; j < n; j++)
         {
-            double v1 = matrix->data(i, j);
+            double v1;
+            matrix->data(i, j, &v1);
             double v2 = height / max;
             matrix->setData(i, j, v1 * v2);
         }
@@ -829,8 +882,11 @@ double BitMapGen::determinantOfMatrix(const DoubleMatrix& mat, int n)
     int D = 0; // Initialize result
 
     //  Base case : if matrix contains single element
-    if (n == 1)
-        return mat.data(0, 0);
+    if (n == 1){
+        double v;
+        mat.data(0, 0, &v);
+        return v;
+    }
 
     DoubleMatrix temp;
     temp.init(n, n);
@@ -842,7 +898,10 @@ double BitMapGen::determinantOfMatrix(const DoubleMatrix& mat, int n)
     {
         // Getting Cofactor of mat[0][f]
         getCofactor(mat, &temp, 0, f, n);
-        D += (int)(sign * mat.data(0, f) * determinantOfMatrix(temp, n - 1));
+        double v1;
+        mat.data(0, f, &v1);
+
+        D += (int)(sign * v1 * determinantOfMatrix(temp, n - 1));
 
         // terms are to be added with alternate sign
         sign = -sign;
@@ -864,7 +923,8 @@ void BitMapGen::getCofactor(const DoubleMatrix& mat, DoubleMatrix* temp, int p, 
             //  which are not in given row and column
             if (row != p && col != q)
             {
-                double v = mat.data(row, col);
+                double v;
+                mat.data(row, col, &v);
                 temp->setData(i, j++, v);
 
                 // Row is filled, so increase row index and
@@ -893,7 +953,9 @@ bool BitMapGen::invMat(const DoubleMatrix& mat, DoubleMatrix* inv, int a)
     {
         for (int j = 0; j < a; j++)
         {
-            double v = adj.data(i, j) / det;
+            double v0;
+            adj.data(i, j, &v0);
+            double v = v0 / det;
             inv->setData(i, j, v);
         }
     }

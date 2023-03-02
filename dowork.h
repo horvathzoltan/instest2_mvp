@@ -2,7 +2,9 @@
 #define DOWORK_H
 
 #include <QCoreApplication>
+#include <QString>
 #include <QTimer>
+#include <helpers/bitmapgen.h>
 #include <models/responsemodel.h>
 #include <models/settings.h>
 #include <models/viewmodel.h>
@@ -18,7 +20,8 @@ class DoWork: public QObject
 private:
     static const QString APIVER;
     static QList<Model::InsoleType> _insoleTypes;
-
+    BitMapGen _bitmapGen_L;
+    BitMapGen _bitmapGen_R;
     //enum GetRequestType{checkin, apiver};
 public:
     explicit DoWork(QObject *parent = nullptr);   
