@@ -551,6 +551,7 @@ QString Model::InsoleData::toString()
     QString a;
     for(int i=0;i<pressures.length();i++){
         if(!a.isEmpty()) a+=',';
+        if(!(i%8)) a+='\n';
         a+=QString::number(pressures[i]);
     }
     return QString::number(V)+':'+a;

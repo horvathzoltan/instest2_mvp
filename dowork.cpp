@@ -40,23 +40,23 @@ auto DoWork::init(const DoWorkInit& m) -> bool
         pR.append(700);
     }
 
-    auto tr = _insoleTypes[0];
-    _bitmapGen_R.Init(tr.GeometryCSV, 4,0.65);
+//    auto tr = _insoleTypes[0];
+//    _bitmapGen_R.Init(tr.GeometryCSV, 4,0.65);
     _bitmapGen_R.setPreview(false);
-    auto pmR = _bitmapGen_R.getPressureMap2(pR);
-    auto bR = BitMapGen::getColoredBitmap(pmR, 16, true, true, Qt::darkGreen);
-    QImageWriter writerR("image_R.png","PNG");
-    bR.mirror(0,1);
-    writerR.write(bR);
+//    auto pmR = _bitmapGen_R.getPressureMap2(pR);
+//    auto bR = BitMapGen::getColoredBitmap(pmR, 16, true, true, Qt::darkGreen);
+//    QImageWriter writerR("image_R.png","PNG");
+//    bR.mirror(0,1);
+//    writerR.write(bR);
 
-    auto tl = _insoleTypes[1];
-    _bitmapGen_L.Init(tl.GeometryCSV, 4,0.65);
+//    auto tl = _insoleTypes[1];
+//    _bitmapGen_L.Init(tl.GeometryCSV, 4,0.65);
     _bitmapGen_R.setPreview(false);
-    auto pmL = _bitmapGen_L.getPressureMap2(pL);
-    auto bL = BitMapGen::getColoredBitmap(pmL, 16, true, true, Qt::darkBlue);
-    QImageWriter writerL("image_L.png","PNG");
-    bL.mirror(0,1);
-    writerL.write(bL);
+//    auto pmL = _bitmapGen_L.getPressureMap2(pL);
+//    auto bL = BitMapGen::getColoredBitmap(pmL, 16, true, true, Qt::darkBlue);
+//    QImageWriter writerL("image_L.png","PNG");
+//    bL.mirror(0,1);
+//    writerL.write(bL);
 
     _isInited = true;
     return true;
@@ -228,10 +228,16 @@ void DoWork::ResponseOkAction(const QUuid& guid, const QString& action,  QByteAr
                     if(r.apiKey_L.count()==1)
                     {
                         _apiKey_L=r.apiKey_L.first();
+                        InsoleApi& api = _insoleApis[_apiKey_L];
+                        Model::InsoleType* tl = api.insoleType;
+                        _bitmapGen_L.Init(tl->GeometryCSV, 4,0.65);
                     }
                     if(r.apiKey_R.count()==1)
                     {
                         _apiKey_R=r.apiKey_R.first();
+                        InsoleApi& api = _insoleApis[_apiKey_R];
+                        Model::InsoleType* tr = api.insoleType;
+                        _bitmapGen_R.Init(tr->GeometryCSV, 4,0.65);
                     }
                     if(!(_apiKey_L.isEmpty() || _apiKey_R.isEmpty())){
                         zInfo("start getdata");
@@ -243,6 +249,37 @@ void DoWork::ResponseOkAction(const QUuid& guid, const QString& action,  QByteAr
                 ResponseModel::PiData r(_findPiPresenterGuid);
                 r.direction = insoleApi.direction;
                 r.message = insoleApi.insoleData.toString();
+                static int counter_L = 0;
+                static int counter_R = 0;
+
+                if(r.direction == Model::PhysDirection::Directions::Left){
+                    auto pmL = _bitmapGen_L.getPressureMap2(insoleApi.insoleData.pressures);
+                    auto bL = BitMapGen::getColoredBitmap(pmL, 16, true, true, Qt::black);
+                    r.heatmapImage = bL;
+
+                    if(_test && counter_L==0)
+                    {
+                        QImageWriter writerL("image_L.png","PNG");
+                        bL.mirror(0,1);
+                        writerL.write(bL);
+                    }
+                    counter_L++;
+                }
+                else if(r.direction == Model::PhysDirection::Directions::Right)
+                {
+                    auto pmR = _bitmapGen_R.getPressureMap2(insoleApi.insoleData.pressures);
+                    auto bR = BitMapGen::getColoredBitmap(pmR, 16, true, true, Qt::black);
+                    r.heatmapImage = bR;
+
+                    if(_test && counter_R==0)
+                    {
+                        QImageWriter writerR("image_R.png","PNG");
+                        bR.mirror(0,1);
+                        writerR.write(bR);
+                    }
+                    counter_R++;
+                }
+
                 emit ResponsePiData(r);
             }
         }

@@ -18,6 +18,7 @@ class DoWork: public QObject
 {
     Q_OBJECT
 private:
+    bool _test = false;
     static const QString APIVER;
     static QList<Model::InsoleType> _insoleTypes;
     BitMapGen _bitmapGen_L;

@@ -14,7 +14,7 @@ namespace ResponseModel{
             guid = _guid;
         }
         QString message;
-        QUuid guid;
+        QUuid guid;        
     };
 
 
@@ -35,6 +35,7 @@ namespace ResponseModel{
     struct PiData: public Base{
         PiData(const QUuid _guid):Base(_guid){};
 
+        QImage heatmapImage;
         //QString msg;
         Model::PhysDirection::Directions direction;
     };

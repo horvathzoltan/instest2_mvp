@@ -93,6 +93,7 @@ void MainPresenter::onResponsePiData(ResponseModel::PiData m)
 
     vm.direction = m.direction;
     vm.message = m.message;
+    vm.heatmapImage = m.heatmapImage;
 
     _senders[m.guid]->set_PiDataView(vm);
     // ha a request ready, azaz nem jön több művelet

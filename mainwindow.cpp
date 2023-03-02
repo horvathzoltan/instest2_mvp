@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QDebug>
+#include <QPainter>
 #include "models/model.h"
 
 MainWindow::MainWindow(QWidget *parent)
@@ -51,14 +52,39 @@ void MainWindow::set_ApiverView(const ViewModel::FindPi &m)
 
 void MainWindow::set_PiDataView(const ViewModel::PiData &m)
 {
-    QLabel* l;
+    QLabel* labelMessage;
+    QLabel* labelImage;
     switch(m.direction){
-    case Model::PhysDirection::Directions::Left: l=ui->label_2_L;break;
-    case Model::PhysDirection::Directions::Right: l=ui->label_2_R;break;
-    default: l=nullptr;break;
+    case Model::PhysDirection::Directions::Left:
+        labelMessage=ui->label_2_L;
+        labelImage = ui->label_3_L;
+        break;
+    case Model::PhysDirection::Directions::Right:
+        labelMessage=ui->label_2_R;
+        labelImage = ui->label_3_R;
+        break;
+    default:
+        labelMessage=nullptr;
+        labelImage=nullptr;
+        break;
     }
-    if(!l) return;
-    l->setText(m.message);
+    if(labelMessage) labelMessage->setText(m.message);
+
+    if(labelImage){
+        //m.heatmapImage.mirror(false, true);
+        auto pixmap = QPixmap::fromImage(
+                    m.heatmapImage.mirrored(false, true)
+                    );
+
+        /*QImage image;
+        QPainter p;
+        p.begin(&image);
+        p.setCompositionMode(QPainter::CompositionMode_DestinationIn);
+        p.fillRect(image.rect(), QColor(0, 0, 0, 50));
+        p.end();*/
+
+        labelImage->setPixmap(pixmap);
+    }
 }
 
 void MainWindow::onTimerTimeout()
